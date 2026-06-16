@@ -1,0 +1,2892 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>红色印记·时空重构 — 中国红色文化交互叙事系统</title>
+    <script src="./js/echarts.min.js"></script>
+    <script src="./js/china.js"></script>
+    <style>
+        /* ==================== CSS Reset & Base ==================== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --red-deep: #8B0000;
+            --red-primary: #C41E3A;
+            --red-light: #E8443A;
+            --gold-dark: #B8860B;
+            --gold-primary: #DAA520;
+            --gold-light: #FFD700;
+            --ink-dark: #2C2C2C;
+            --ink-medium: #4A4A4A;
+            --ink-light: #6A6A6A;
+            --ink-lighter: #9A9A9A;
+            --paper-bg: #FFF8F0;
+            --paper-light: #FFFAF5;
+            --text-dark: #1A1A1A;
+            --text-light: #2C2C2C;
+            --shadow-red: rgba(196, 30, 58, 0.3);
+            --shadow-gold: rgba(218, 165, 32, 0.4);
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'KaiTi', '楷体', 'STKaiti', 'SimKai', '宋体', 'SimSun', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            background: linear-gradient(180deg, #FFFEF8 0%, #FFF8F0 30%, #FFFAF5 70%, #FFFDF8 100%);
+            color: var(--text-dark);
+            overflow-x: hidden;
+            line-height: 1.8;
+        }
+
+        /* ==================== Loading Screen ==================== */
+        #loading-screen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(180deg, #FFFEF8 0%, #FFF8F0 30%, #FFFAF5 70%, #FFFDF8 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+        #loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        .loading-star {
+            width: 80px; height: 80px;
+            position: relative;
+            animation: pulse-star 1.5s ease-in-out infinite;
+        }
+        .loading-star::before {
+            content: '★';
+            font-size: 81px;
+            color: var(--red-light);
+            filter: drop-shadow(0 0 30px var(--red-primary)) drop-shadow(0 0 60px var(--red-deep));
+        }
+        @keyframes pulse-star {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.8; }
+        }
+        .loading-text {
+            margin-top: 25px;
+            font-size: 25px;
+            color: var(--gold-light);
+            letter-spacing: 6px;
+            font-weight: bold;
+            text-shadow: 0 0 15px var(--gold-primary);
+        }
+
+        /* ==================== Navigation ==================== */
+        nav {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 0 40px;
+            height: 75px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(90deg, rgba(196, 30, 58, 0.95) 0%, rgba(232, 68, 58, 0.95) 50%, rgba(196, 30, 58, 0.95) 100%);
+            backdrop-filter: blur(20px);
+            border-bottom: 2px solid rgba(218, 165, 32, 0.6);
+            box-shadow: 0 4px 20px rgba(196, 30, 58, 0.3);
+            transition: all 0.3s ease;
+        }
+        nav.scrolled {
+            background: linear-gradient(90deg, rgba(196, 30, 58, 0.98) 0%, rgba(232, 68, 58, 0.98) 50%, rgba(196, 30, 58, 0.98) 100%);
+            box-shadow: 0 6px 30px rgba(196, 30, 58, 0.4);
+        }
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-decoration: none;
+        }
+        .nav-brand .star-icon {
+            font-size: 37px;
+            color: var(--red-light);
+            filter: drop-shadow(0 0 12px var(--red-primary)) drop-shadow(0 0 24px var(--red-deep));
+        }
+        .nav-brand .brand-text {
+            font-size: 25px;
+            font-weight: 700;
+            color: var(--gold-light);
+            letter-spacing: 3px;
+            text-shadow: 0 0 15px var(--gold-primary);
+        }
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            list-style: none;
+        }
+        .nav-links a {
+            color: #FFF;
+            text-decoration: none;
+            padding: 10px 22px;
+            border-radius: 8px;
+            font-size: 17px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .nav-links a:hover {
+            color: var(--gold-light);
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .nav-links a.active {
+            color: var(--gold-light);
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 2px; left: 50%;
+            width: 0; height: 2px;
+            background: var(--gold-primary);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+        .nav-links a:hover::after { width: 60%; }
+
+        /* Mobile nav toggle */
+        .nav-toggle {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            padding: 5px;
+        }
+        .nav-toggle span {
+            width: 24px; height: 2px;
+            background: var(--gold-primary);
+            transition: all 0.3s ease;
+        }
+
+        /* ==================== Hero Section ==================== */
+        #hero {
+            position: relative;
+            height: 100vh;
+            min-height: 700px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .hero-bg {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background:
+                radial-gradient(ellipse at 30% 50%, rgba(196, 30, 58, 0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 30%, rgba(218, 165, 32, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(196, 30, 58, 0.1) 0%, transparent 60%),
+                linear-gradient(180deg, #FFFEF8 0%, #FFF8F0 50%, #FFFAF5 100%);
+        }
+        /* Animated particles */
+        .hero-particles {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            overflow: hidden;
+        }
+        .particle {
+            position: absolute;
+            width: 4px; height: 4px;
+            background: var(--gold-light);
+            border-radius: 50%;
+            opacity: 0;
+            animation: float-particle linear infinite;
+            box-shadow: 0 0 8px var(--gold-primary);
+        }
+        @keyframes float-particle {
+            0% { opacity: 0; transform: translateY(100vh) scale(0); }
+            10% { opacity: 0.9; }
+            90% { opacity: 0.4; }
+            100% { opacity: 0; transform: translateY(-10vh) scale(1.2); }
+        }
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            padding: 0 20px;
+            max-width: 900px;
+        }
+        .hero-subtitle {
+            font-size: 19px;
+            color: var(--red-primary);
+            letter-spacing: 10px;
+            text-transform: uppercase;
+            margin-bottom: 25px;
+            opacity: 0;
+            animation: fadeInUp 1s ease 0.3s forwards;
+        }
+        .hero-title {
+            font-size: 65px;
+            font-weight: 900;
+            color: var(--text-dark);
+            letter-spacing: 8px;
+            margin-bottom: 15px;
+            opacity: 0;
+            animation: fadeInUp 1s ease 0.5s forwards;
+        }
+        .hero-title .highlight {
+            color: var(--red-primary);
+            position: relative;
+        }
+        .hero-title .highlight::after {
+            content: '';
+            position: absolute;
+            bottom: -4px; left: 0;
+            width: 100%; height: 3px;
+            background: linear-gradient(90deg, var(--red-primary), var(--gold-primary));
+            border-radius: 2px;
+        }
+        .hero-desc {
+            font-size: 18px;
+            color: var(--ink-lighter);
+            margin-top: 24px;
+            line-height: 1.8;
+            opacity: 0;
+            animation: fadeInUp 1s ease 0.7s forwards;
+        }
+        .hero-cta {
+            margin-top: 40px;
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            opacity: 0;
+            animation: fadeInUp 1s ease 0.9s forwards;
+        }
+        .btn-primary {
+            padding: 16px 40px;
+            background: linear-gradient(135deg, var(--red-light), var(--red-primary), var(--red-deep));
+            color: white;
+            border: 2px solid rgba(255, 215, 0, 0.4);
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 3px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            box-shadow: 0 6px 25px var(--shadow-red), 0 0 20px rgba(218, 165, 32, 0.2);
+        }
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 35px var(--shadow-red), 0 0 30px var(--shadow-gold);
+        }
+        .btn-secondary {
+            padding: 16px 40px;
+            background: transparent;
+            color: var(--gold-light);
+            border: 2px solid var(--gold-primary);
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            letter-spacing: 3px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        .btn-secondary:hover {
+            background: rgba(218, 165, 32, 0.15);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px var(--shadow-gold);
+        }
+        .scroll-indicator {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            animation: fadeInUp 1s ease 1.2s forwards;
+        }
+        .scroll-indicator span {
+            font-size: 12px;
+            color: var(--ink-lighter);
+            letter-spacing: 3px;
+        }
+        .scroll-arrow {
+            width: 20px; height: 20px;
+            border-right: 2px solid var(--gold-primary);
+            border-bottom: 2px solid var(--gold-primary);
+            transform: rotate(45deg);
+            animation: bounce-arrow 2s ease infinite;
+        }
+        @keyframes bounce-arrow {
+            0%, 100% { transform: rotate(45deg) translateY(0); opacity: 1; }
+            50% { transform: rotate(45deg) translateY(8px); opacity: 0.5; }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ==================== Section Common ==================== */
+        .section {
+            padding: 100px 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        .section-label {
+            font-size: 15px;
+            color: var(--gold-light);
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            text-shadow: 0 0 8px var(--gold-primary);
+        }
+        .section-title {
+            font-size: 40px;
+            font-weight: 800;
+            color: var(--text-light);
+            letter-spacing: 4px;
+            margin-bottom: 18px;
+        }
+        .section-divider {
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--red-deep), var(--red-primary), var(--gold-light), var(--red-primary), var(--red-deep));
+            margin: 0 auto 25px;
+            border-radius: 2px;
+            box-shadow: 0 0 15px var(--shadow-red);
+        }
+        .section-desc {
+            font-size: 18px;
+            color: var(--ink-lighter);
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 2;
+        }
+
+        /* ==================== Overview Cards ==================== */
+        #overview {
+            background: linear-gradient(180deg, #FFFAF5 0%, #FFF8F0 100%);
+        }
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin-top: 50px;
+        }
+        .overview-card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid rgba(196, 30, 58, 0.25);
+            border-radius: 16px;
+            padding: 36px 28px;
+            text-align: center;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(196, 30, 58, 0.1);
+        }
+        .overview-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 3px;
+            background: linear-gradient(90deg, var(--red-primary), var(--gold-primary));
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        .overview-card:hover::before { opacity: 1; }
+        .overview-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: rgba(218, 165, 32, 0.3);
+        }
+        .card-icon {
+            font-size: 42px;
+            margin-bottom: 16px;
+            display: block;
+        }
+        .card-number {
+            font-size: 36px;
+            font-weight: 900;
+            color: var(--gold-primary);
+            margin-bottom: 8px;
+        }
+        .card-label {
+            font-size: 18px;
+            color: var(--ink-lighter);
+            letter-spacing: 2px;
+        }
+
+        /* ==================== Map Section ==================== */
+        #map-section {
+            background: linear-gradient(180deg, #FFF8F0 0%, #FFFAF5 100%);
+        }
+        .map-container {
+            position: relative;
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(196, 30, 58, 0.25);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(196, 30, 58, 0.1);
+        }
+        .map-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            background: linear-gradient(90deg, rgba(196, 30, 58, 0.95) 0%, rgba(232, 68, 58, 0.95) 50%, rgba(196, 30, 58, 0.95) 100%);
+            border-bottom: 2px solid rgba(218, 165, 32, 0.4);
+        }
+        .map-toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .map-toolbar-left .toolbar-label {
+            font-size: 16px;
+            color: #FFF;
+            letter-spacing: 3px;
+        }
+        .search-box {
+            position: relative;
+        }
+        .search-box input {
+            padding: 10px 16px 10px 40px;
+            background: rgba(45, 45, 68, 0.8);
+            border: 1px solid rgba(218, 165, 32, 0.2);
+            border-radius: 8px;
+            color: var(--text-light);
+            font-size: 14px;
+            width: 280px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        .search-box input::placeholder {
+            color: var(--ink-lighter);
+        }
+        .search-box input:focus {
+            border-color: var(--gold-primary);
+            box-shadow: 0 0 15px var(--shadow-gold);
+        }
+        .search-box .search-icon {
+            position: absolute;
+            left: 14px; top: 50%;
+            transform: translateY(-50%);
+            color: var(--ink-lighter);
+            font-size: 14px;
+        }
+        .search-results {
+            position: absolute;
+            top: 100%; left: 0;
+            width: 100%;
+            background: rgba(26, 26, 46, 0.95);
+            border: 1px solid rgba(218, 165, 32, 0.2);
+            border-radius: 8px;
+            margin-top: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            z-index: 100;
+        }
+        .search-results.active { display: block; }
+        .search-result-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            font-size: 13px;
+            color: var(--text-light);
+            border-bottom: 1px solid rgba(218, 165, 32, 0.1);
+        }
+        .search-result-item:last-child { border-bottom: none; }
+        .search-result-item:hover {
+            background: rgba(218, 165, 32, 0.1);
+            color: var(--gold-primary);
+        }
+        .map-toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .filter-btn {
+            padding: 8px 16px;
+            background: rgba(45, 45, 68, 0.8);
+            border: 1px solid rgba(218, 165, 32, 0.2);
+            border-radius: 6px;
+            color: var(--text-light);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .filter-btn:hover, .filter-btn.active {
+            background: rgba(196, 30, 58, 0.2);
+            border-color: var(--red-primary);
+            color: var(--red-light);
+        }
+        #map-chart {
+            width: 100%;
+            height: 600px;
+            position: relative;
+        }
+        .map-zoom-controls {
+            position: absolute;
+            right: 20px;
+            bottom: 60px;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+        .map-zoom-btn {
+            width: 40px;
+            height: 40px;
+            background: rgba(26, 26, 46, 0.9);
+            border: 1px solid rgba(218, 165, 32, 0.3);
+            border-radius: 8px;
+            color: var(--gold-primary);
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            line-height: 1;
+            user-select: none;
+        }
+        .map-zoom-btn:hover {
+            background: rgba(196, 30, 58, 0.3);
+            border-color: var(--red-primary);
+            color: var(--red-light);
+            transform: scale(1.05);
+        }
+        .map-zoom-btn:active {
+            transform: scale(0.95);
+        }
+        .map-zoom-btn + .map-zoom-btn {
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+        }
+        .map-zoom-btn:first-of-type {
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        .map-container {
+            position: relative;
+        }
+        .map-legend {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            padding: 12px 24px;
+            background: rgba(26, 26, 46, 0.6);
+            border-top: 1px solid rgba(218, 165, 32, 0.1);
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            color: var(--ink-lighter);
+        }
+        .legend-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+        }
+
+        /* ==================== Timeline Section ==================== */
+        #timeline-section {
+            background: linear-gradient(180deg, #FFF8F0 0%, #FFFAF5 50%, #FFF8F0 100%);
+        }
+        .timeline-slider-container {
+            margin-top: 50px;
+            position: relative;
+        }
+        .timeline-dates {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 10px;
+            margin-bottom: 12px;
+        }
+        .timeline-date {
+            font-size: 14px;
+            color: var(--ink-lighter);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        .timeline-date:hover, .timeline-date.active {
+            color: #f90c0c;
+            background: rgba(218, 165, 32, 0.2);
+            text-shadow: 0 0 5px var(#f90c0c);
+        }
+        .timeline-slider {
+            position: relative;
+            width: 100%;
+            height: 8px;
+            background: rgba(61, 24, 24, 0.8);
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .timeline-progress {
+            position: absolute;
+            top: 0; left: 0;
+            height: 100%;
+            background: linear-gradient(90deg, var(--red-deep), var(--red-primary), var(--gold-light), var(--red-primary), var(--red-deep));
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 15px var(--shadow-red);
+        }
+        .timeline-thumb {
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 24px; height: 24px;
+            background: var(--gold-light);
+            border: 4px solid var(--red-deep);
+            border-radius: 50%;
+            cursor: grab;
+            transition: all 0.3s ease;
+            z-index: 2;
+            box-shadow: 0 0 15px var(--shadow-gold);
+        }
+        .timeline-thumb:hover {
+            box-shadow: 0 0 25px var(--shadow-gold), 0 0 15px var(--shadow-red);
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+        .timeline-events {
+            margin-top: 40px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .timeline-event {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(196, 30, 58, 0.2);
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.4s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(196, 30, 58, 0.08);
+        }
+        .timeline-event::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0;
+            width: 5px; height: 100%;
+            background: linear-gradient(180deg, var(--gold-light), var(--red-primary));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .timeline-event:hover::before { opacity: 1; }
+        .timeline-event:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 35px var(--shadow-red), 0 0 20px var(--shadow-gold);
+            border-color: rgba(196, 30, 58, 0.4);
+        }
+        .timeline-event.hidden-event {
+            opacity: 0.2;
+            transform: scale(0.95);
+            pointer-events: none;
+        }
+        .event-date {
+            font-size: 12px;
+            color: var(--gold-primary);
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+        .event-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-light);
+            margin-bottom: 8px;
+        }
+        .event-desc {
+            font-size: 14px;
+            color: var(--ink-lighter);
+            line-height: 1.6;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        /* ==================== Story Section ==================== */
+        #stories {
+            background: linear-gradient(180deg, #FFFAF5 0%, #FFF8F0 100%);
+        }
+        .stories-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-top: 50px;
+        }
+        .story-card {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(196, 30, 58, 0.2);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(196, 30, 58, 0.08);
+        }
+        .story-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 15px 35px rgba(196, 30, 58, 0.15);
+            border-color: rgba(196, 30, 58, 0.35);
+        }
+        .story-card-img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 64px;
+            position: relative;
+            overflow: hidden;
+        }
+        .story-card-photo {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+        }
+        .img-overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(135deg, rgba(139, 0, 0, 0.6), rgba(218, 165, 32, 0.3));
+        }
+        .story-card-img .img-bg {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+        }
+        .story-card-img .img-icon {
+            position: relative;
+            z-index: 2;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+        }
+        .story-card-body {
+            padding: 24px;
+        }
+        .story-card-date {
+            font-size: 12px;
+            color: var(--gold-primary);
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+        .story-card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-light);
+            margin-bottom: 12px;
+        }
+        .story-card-text {
+            font-size: 14px;
+            color: var(--ink-lighter);
+            line-height: 1.7;
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .story-card-footer {
+            padding: 16px 24px;
+            border-top: 1px solid rgba(218, 165, 32, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .story-card-link {
+            font-size: 13px;
+            color: var(--gold-primary);
+            text-decoration: none;
+            letter-spacing: 1px;
+            transition: color 0.3s ease;
+        }
+        .story-card-link:hover { color: var(--gold-light); }
+
+        /* ==================== Detail Modal ==================== */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(255, 248, 240, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 5000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+        .modal {
+            background: rgba(255, 255, 255, 0.98);
+            border: 2px solid rgba(196, 30, 58, 0.3);
+            border-radius: 20px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+            transform: translateY(30px);
+            transition: transform 0.4s ease;
+            box-shadow: 0 20px 50px rgba(196, 30, 58, 0.15);
+        }
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+        .modal-close {
+            position: absolute;
+            top: 20px; right: 20px;
+            width: 44px; height: 44px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid rgba(196, 30, 58, 0.3);
+            border-radius: 50%;
+            color: var(--red-primary);
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+        .modal-close:hover {
+            background: rgba(196, 30, 58, 0.9);
+            border-color: var(--red-primary);
+            color: #FFF;
+        }
+        .modal-header {
+            padding: 40px 40px 24px;
+            position: relative;
+        }
+        .modal-header-bg {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(135deg, rgba(139, 0, 0, 0.4), rgba(218, 165, 32, 0.2));
+            border-radius: 20px 20px 0 0;
+        }
+        .modal-header-content {
+            position: relative;
+            z-index: 1;
+        }
+        .modal-date {
+            font-size: 15px;
+            color: var(--gold-light);
+            letter-spacing: 4px;
+            margin-bottom: 12px;
+            text-shadow: 0 0 8px var(--gold-primary);
+        }
+        .modal-title {
+            font-size: 34px;
+            font-weight: 800;
+            color: var(--text-light);
+            letter-spacing: 3px;
+            margin-bottom: 8px;
+        }
+        .modal-location {
+            font-size: 14px;
+            color: var(--ink-lighter);
+        }
+        .modal-location::before {
+            content: '📍 ';
+        }
+        .modal-body {
+            padding: 24px 40px 40px;
+        }
+        .modal-story {
+            font-size: 16px;
+            color: var(--ink-lighter);
+            line-height: 2;
+            text-indent: 2em;
+        }
+        .modal-quote {
+            margin: 24px 0;
+            padding: 20px 24px;
+            border-left: 4px solid var(--gold-primary);
+            background: rgba(218, 165, 32, 0.05);
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+            color: var(--gold-light);
+            font-size: 15px;
+            line-height: 1.8;
+        }
+
+        /* ==================== Scrollbar ==================== */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(196, 30, 58, 0.1); }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--red-deep), var(--red-primary), var(--gold-light));
+            border-radius: 4px;
+            box-shadow: 0 0 8px var(--shadow-red);
+        }
+        ::-webkit-scrollbar-thumb:hover { 
+            background: linear-gradient(180deg, var(--red-primary), var(--gold-light));
+            box-shadow: 0 0 12px var(--shadow-red), 0 0 8px var(--shadow-gold);
+        }
+
+        /* ==================== Responsive ==================== */
+        @media (max-width: 1024px) {
+            .overview-grid { grid-template-columns: repeat(2, 1fr); }
+            .stories-grid { grid-template-columns: repeat(2, 1fr); }
+            .timeline-events { grid-template-columns: 1fr; }
+            .footer-content { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 768px) {
+            nav { padding: 0 20px; }
+            .nav-links { display: none; }
+            .nav-toggle { display: flex; }
+            .hero-title { font-size: 32px; letter-spacing: 3px; }
+            .hero-subtitle { font-size: 13px; letter-spacing: 4px; }
+            .hero-desc { font-size: 15px; }
+            .hero-cta { flex-direction: column; align-items: center; }
+            .section { padding: 60px 20px; }
+            .section-title { font-size: 26px; }
+            .overview-grid { grid-template-columns: 1fr; }
+            .stories-grid { grid-template-columns: 1fr; }
+            .map-toolbar { flex-direction: column; gap: 12px; }
+            .search-box input { width: 100%; }
+            .map-toolbar-right { width: 100%; justify-content: center; }
+            #map-chart { height: 400px; }
+            .modal { margin: 20px; }
+            .modal-header { padding: 24px; }
+            .modal-body { padding: 16px 24px 24px; }
+            .modal-title { font-size: 24px; }
+            .footer-content { grid-template-columns: 1fr; }
+        }
+
+        /* ==================== Animations ==================== */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .fade-in-delay-1 { transition-delay: 0.1s; }
+        .fade-in-delay-2 { transition-delay: 0.2s; }
+        .fade-in-delay-3 { transition-delay: 0.3s; }
+        .fade-in-delay-4 { transition-delay: 0.4s; }
+    </style>
+</head>
+<body>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loading-star"></div>
+	<br>
+        <div class="loading-text">红色文化加载中...</div>
+    </div>
+
+    <!-- Navigation -->
+    <nav id="navbar">
+        <a href="#hero" class="nav-brand">
+            <img src="./favicon.ico" alt="Logo" class="star-icon" style="width: 37px; height: 37px; object-fit: contain;">
+            <span class="brand-text">红色印记·时空重构</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="#hero" class="active">首页</a></li>
+            <li><a href="#overview">概览</a></li>
+            <li><a href="#map-section">地图</a></li>
+            <li><a href="#timeline-section">时间轴</a></li>
+	    <li><a href="#practice">实践探索</a></li>
+        </ul>
+        <div class="nav-toggle" onclick="toggleMobileNav()">
+            <span></span><span></span><span></span>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-particles" id="particles"></div>
+        <div class="hero-content">
+            <div class="hero-subtitle">红色印记 · 时空重构</div>
+            <h1 class="hero-title">
+                感悟<span class="highlight">革命精神</span><br>追寻红色记忆
+            </h1>
+            <p class="hero-desc">
+                以中国红色文化为核心，通过交互式地图重现遵义会议等经典革命事件。
+            </p>
+            <div class="hero-cta">
+                <a href="#timeline-section" class="btn-primary">开始探索</a>
+		<a href="" class="btn-primary" onclick="event.stopPropagation(); window.open('https://zghswhjhxsxt.ldfzx.cn/question-answer.html', '_blank')">红色知识 AI 助手</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Overview Section -->
+    <section id="overview">
+        <div class="section">
+            <div class="section-header fade-in">
+                <h2 class="section-title">中国红色文化概览</h2>
+                <div class="section-divider"></div>
+                <p class="section-desc">
+                    从南湖红船到开国大典，从长征精神到改革开放，中国红色文化承载着中国共产党百年奋斗的光辉历程，记录着中华民族从站起来、富起来到强起来的伟大飞跃。
+                </p>
+            </div>
+            <div class="overview-grid">
+                <div class="overview-card fade-in fade-in-delay-1">
+                    <span class="card-icon">🚩</span>
+                    <div class="card-number">100+年</div>
+                    <div class="card-label">建党时间</div>
+                </div>
+                <div class="overview-card fade-in fade-in-delay-2">
+                    <span class="card-icon">⭐</span>
+                    <div class="card-number">48个</div>
+                    <div class="card-label">历史节点</div>
+                </div>
+                <div class="overview-card fade-in fade-in-delay-3">
+                    <span class="card-icon">🏔️</span>
+                    <div class="card-number">2.5万公里</div>
+                    <div class="card-label">长征里程</div>
+                </div>
+                <div class="overview-card fade-in fade-in-delay-4">
+                    <span class="card-icon">💪</span>
+                    <div class="card-number">无限</div>
+                    <div class="card-label">革命力量</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Map Section -->
+    <section id="map-section">
+        <div class="section">
+            <div class="section-header fade-in">
+                <h2 class="section-title">革命事件地图</h2>
+                <div class="section-divider"></div>
+                <p class="section-desc">
+                    点击地图上的标记点，了解每个历史节点的详细故事。拖动时间轴可按时间筛选事件。
+                </p>
+            </div>
+            <div class="map-container fade-in">
+                <div class="map-toolbar">
+                    <div class="map-toolbar-left">
+                        <span class="toolbar-label">🗺️ 战役地图</span>
+                        <div class="search-box">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="search-input" placeholder="搜索地点或事件..." oninput="handleSearch(this.value)">
+                            <div class="search-results" id="search-results"></div>
+                        </div>
+                    </div>
+                    <div class="map-toolbar-right">
+                    </div>
+                </div>
+                <div id="map-chart"></div>
+                <div class="map-zoom-controls">
+                    <button class="map-zoom-btn" onclick="zoomMap(1)" title="放大">+</button>
+                    <button class="map-zoom-btn" onclick="zoomMap(-1)" title="缩小">−</button>
+                </div>
+                <div class="map-legend">
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #C41E3A; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div>
+                        <span>历史节点</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Timeline Section -->
+    <section id="timeline-section">
+        <div class="section">
+            <div class="section-header fade-in">
+                <h2 class="section-title">历史时间轴</h2>
+                <div class="section-divider"></div>
+                <p class="section-desc">
+                    拖动时间轴滑块，按时间顺序回顾中国共产党的光辉历程。
+                </p>
+            </div>
+            <div class="timeline-slider-container fade-in">
+                <div class="timeline-dates">
+                    <span class="timeline-date active" onclick="setTimeline(0)">1921年</span>
+                    <span class="timeline-date" onclick="setTimeline(1)">1927年</span>
+                    <span class="timeline-date" onclick="setTimeline(2)">1931年</span>
+                    <span class="timeline-date" onclick="setTimeline(3)">1934年</span>
+                    <span class="timeline-date" onclick="setTimeline(4)">1935年</span>
+                    <span class="timeline-date" onclick="setTimeline(5)">1937年</span>
+                    <span class="timeline-date" onclick="setTimeline(6)">1945年</span>
+                    <span class="timeline-date" onclick="setTimeline(7)">1949年</span>
+                    <span class="timeline-date" onclick="setTimeline(8)">新时代</span>
+                </div>
+                <div class="timeline-slider" id="timeline-slider">
+                    <div class="timeline-progress" id="timeline-progress"></div>
+                    <div class="timeline-thumb" id="timeline-thumb"></div>
+                </div>
+            </div>
+            <div class="timeline-events" id="timeline-events">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+    </section>
+  
+    <!-- Practice Exploration Section -->
+    <section id="practice">
+        <div class="section">
+            <div class="section-header fade-in">
+                <h2 class="section-title">实践探索</h2>
+                <div class="section-divider"></div>
+                <p class="section-desc">
+                    通过交互式游戏，深度感悟中国红色文化，做出你的历史抉择。
+                </p>
+            </div>
+            <div class="stories-grid">
+                <div class="story-card" onclick="window.open('https://zghswhjhxsxt.ldfzx.cn/zunyi-game-practice.html', '_blank')">
+                    <div class="story-card-img">
+                        <img src="./Image/Zunyi_Conference.jpg" alt="遵义会议" class="story-card-photo">
+                    </div>
+                    <div class="story-card-body">
+                        <div class="story-card-date">1935年1月15日-17日</div>
+                        <h3 class="story-card-title">遵义会议 - 生死攸关的转折</h3>
+                        <p class="story-card-text">
+                            通过8个历史场景的交互式决策模拟，深度体验遵义会议的全过程。
+                            做出你的历史抉择，解锁六大红色精神成就，感受实事求是、独立自主、
+                            团结协作的遵义会议精神。
+                        </p>
+                    </div>
+                    <div class="story-card-footer">
+                        <a href="javascript:void(0)" class="story-card-link" onclick="event.stopPropagation(); window.open('https://zghswhjhxsxt.ldfzx.cn/zunyi-game-practice.html', '_blank')">开始探索 →</a>
+                        <span style="font-size: 12px; color: var(--gold-primary);">🎮 交互游戏</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Detail Modal -->
+    <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+        <div class="modal" id="modal">
+            <button class="modal-close" onclick="closeModal()">✕</button>
+            <div class="modal-header">
+                <div class="modal-header-bg"></div>
+                <div class="modal-header-content">
+                    <div class="modal-date" id="modal-date"></div>
+                    <h2 class="modal-title" id="modal-title"></h2>
+                    <div class="modal-location" id="modal-location"></div>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="modal-story" id="modal-story"></div>
+                <div class="modal-quote" id="modal-quote"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ==================== Data ====================
+    const historyData = [
+    {
+        "id": 0,
+        "name": "中共一大",
+        "lat": 31.2304,
+        "lon": 121.4737,
+        "date": "1921-07-23",
+        "dateLabel": "1921年7月23日",
+        "type": "meeting",
+        "icon": "🏛️",
+        "img": "Image/Chinese_Communist_Party_First_Congress.jpg",
+        "color": "#DAA520",
+        "location": "上海市",
+        "story": "1921年7月23日，中国共产党第一次全国代表大会在上海召开，标志着中国共产党的正式成立。中国共产党的成立是中国历史上开天辟地的大事变，从此中国革命的面貌焕然一新。",
+        "quote": "中国产生了共产党，这是开天辟地的大事变。",
+        "tags": ["建党", "上海", "一大", "开天辟地"],
+        "brief": "中国共产党第一次全国代表大会召开，标志着中国共产党成立。"
+    },
+    {
+        "id": 1,
+        "name": "南昌起义",
+        "lat": 28.6768,
+        "lon": 115.8923,
+        "date": "1927-08-01",
+        "dateLabel": "1927年8月1日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Nanchang_Uprising.jpg",
+        "color": "#C41E3A",
+        "location": "江西省南昌市",
+        "story": "1927年8月1日，中国共产党领导部分国民革命军在江西省南昌市举行武装起义，打响了反对国民党反动派的第一枪，揭开了中国共产党独立领导武装斗争和创建革命军队的序幕。8月1日因此成为中国人民解放军诞生纪念日。",
+        "quote": "南昌起义，打响了反对国民党反动派的第一枪。",
+        "tags": ["武装起义", "建军节", "第一枪", "革命军队"],
+        "brief": "中国共产党独立领导武装斗争的开始，人民军队诞生的标志。"
+    },
+    {
+        "id": 2,
+        "name": "秋收起义",
+        "lat": 27.9925,
+        "lon": 113.6663,
+        "date": "1927-09-09",
+        "dateLabel": "1927年9月9日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Autumn_Harvest_Uprising.jpg",
+        "color": "#C41E3A",
+        "location": "湖南省浏阳市文家市镇",
+        "story": "1927年9月，毛泽东在湖南东部和江西西部领导工农革命军举行秋收起义。起义受挫后，毛泽东率部队向井冈山进军，建立了中国第一个农村革命根据地，开创了\"农村包围城市、武装夺取政权\"的革命道路。",
+        "quote": "秋收起义，开辟了农村包围城市的革命道路。",
+        "tags": ["毛泽东", "井冈山", "农村包围城市", "革命道路"],
+        "brief": "毛泽东领导的武装起义，开辟了井冈山革命根据地和农村包围城市道路。"
+    },
+    {
+        "id": 3,
+        "name": "井冈山会师",
+        "lat": 26.598,
+        "lon": 114.1716,
+        "date": "1928-04-28",
+        "dateLabel": "1928年4月28日",
+        "type": "meeting",
+        "icon": "🤝",
+        "img": "Image/Huangma_Uprising.jpg",
+        "color": "#DAA520",
+        "location": "江西省井冈山市宁冈县砻市镇",
+        "story": "1928年4月，朱德、陈毅率领南昌起义保留下来的部队和湘南起义的农民武装，到达井冈山革命根据地的宁冈砻市，与毛泽东领导的秋收起义部队胜利会师，合编为工农革命军第四军（后改称中国工农红军第四军）。",
+        "quote": "朱毛会师，井冈山精神代代相传。",
+        "tags": ["朱毛会师", "红四军", "井冈山", "革命根据地"],
+        "brief": "朱德与毛泽东两部胜利会师，井冈山革命根据地进入全盛时期。"
+    },
+    {
+        "id": 4,
+        "name": "百色起义",
+        "lat": 23.8806,
+        "lon": 108.3261,
+        "date": "1929-12-11",
+        "dateLabel": "1929年12月11日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Baise_Uprising.jpg",
+        "color": "#C41E3A",
+        "location": "广西壮族自治区百色市",
+        "story": "1929年12月11日，邓小平、张云逸、雷经天等领导百色起义，建立右江根据地和中国工农红军第七军。百色起义是土地革命战争时期重要的武装起义。",
+        "quote": "百色起义，红七军诞生。",
+        "tags": ["百色起义", "邓小平", "红七军", "右江根据地"],
+        "brief": "邓小平领导百色起义，建立右江革命根据地。"
+    },
+    {
+        "id": 5,
+        "name": "古田会议",
+        "lat": 25.1916,
+        "lon": 116.7263,
+        "date": "1929-12-28",
+        "dateLabel": "1929年12月28日-29日",
+        "type": "meeting",
+        "icon": "🏛️",
+        "img": "Image/Gutian_Conference.jpg",
+        "color": "#DAA520",
+        "location": "福建省龙岩市上杭县古田镇",
+        "story": "1929年12月28日至29日，红四军党的第九次代表大会在福建上杭古田召开，史称\"古田会议\"。会议确立了\"思想建党、政治建军\"的基本原则，是中国共产党和人民军队建设史上的重要里程碑。",
+        "quote": "思想建党，政治建军。",
+        "tags": ["思想建党", "政治建军", "里程碑", "军队建设"],
+        "brief": "确立\"思想建党、政治建军\"原则的重要会议，人民军队建设的里程碑。"
+    },
+    {
+        "id": 6,
+        "name": "龙州起义",
+        "lat": 22.3402,
+        "lon": 106.8498,
+        "date": "1930-02-01",
+        "dateLabel": "1930年2月1日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Longzhou_Uprising.jpg",
+        "color": "#C41E3A",
+        "location": "广西壮族自治区龙州县",
+        "story": "1930年2月1日，邓小平、李明瑞、俞作豫等领导龙州起义，建立左江革命根据地和中国工农红军第八军。",
+        "quote": "龙州起义，革命风暴。",
+        "tags": ["龙州起义", "红八军", "左江根据地", "俞作豫"],
+        "brief": "龙州起义建立左江革命根据地。"
+    },
+    {
+        "id": 7,
+        "name": "三次反围剿",
+        "lat": 26.85,
+        "lon": 114.85,
+        "date": "1930-12-25",
+        "dateLabel": "1930年12月-1931年5月",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Third_Encirclement_Campaign.jpg",
+        "color": "#C41E3A",
+        "location": "江西省吉安地区",
+        "story": "1930年12月至1931年5月，红一方面军在毛泽东、朱德指挥下，连续取得三次反\"围剿\"胜利，打退了国民党军队对中央苏区的进攻。",
+        "quote": "诱敌深入，各个击破。",
+        "tags": ["反围剿", "运动战", "毛泽东", "中央苏区"],
+        "brief": "红军连续三次取得反围剿胜利。"
+    },
+    {
+        "id": 8,
+        "name": "瑞金中华苏维埃共和国",
+        "lat": 25.8877,
+        "lon": 116.0229,
+        "date": "1931-11-07",
+        "dateLabel": "1931年11月7日",
+        "type": "meeting",
+        "icon": "🏛️",
+        "img": "Image/Temporary_Central_Government_of_Chinese_Soviet_Republic.jpg",
+        "color": "#DAA520",
+        "location": "江西省瑞金市叶坪村",
+        "story": "1931年11月7日，中华苏维埃第一次全国代表大会在江西瑞金召开，宣布成立中华苏维埃共和国临时中央政府。毛泽东当选为中央执行委员会主席，这是中国共产党在局部地区执政的重要尝试。",
+        "quote": "中华苏维埃共和国，红色政权的摇篮。",
+        "tags": ["红色首都", "苏维埃", "临时中央政府", "毛泽东"],
+        "brief": "中华苏维埃共和国成立，瑞金成为全国苏维埃运动的中心。"
+    },
+    {
+        "id": 9,
+        "name": "宁都起义",
+        "lat": 26.4793,
+        "lon": 115.9726,
+        "date": "1931-12-14",
+        "dateLabel": "1931年12月14日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Ningdu_Uprising.jpg",
+        "color": "#C41E3A",
+        "location": "江西省宁都县",
+        "story": "1931年12月14日，国民党第二十六路军在赵博生、董振堂等领导下于宁都起义，加入中国工农红军。起义对巩固和扩大中央苏区起了重要作用。",
+        "quote": "宁都起义，义旗高扬。",
+        "tags": ["宁都起义", "赵博生", "董振堂", "红五军团"],
+        "brief": "国民党第二十六路军宁都起义，加入红军。"
+    },
+    {
+        "id": 10,
+        "name": "长征开始",
+        "lat": 25.833,
+        "lon": 115.9842,
+        "date": "1934-10-10",
+        "dateLabel": "1934年10月10日",
+        "type": "crossing",
+        "icon": "🚶",
+        "img": "Image/Autumn_Harvest_Uprising.jpg",
+        "color": "#4FC3F7",
+        "location": "江西省瑞金市",
+        "story": "1934年10月，由于第五次反\"围剿\"失败，中共中央和中革军委率中央红军主力8.6万余人，从江西瑞金等地出发，开始了震撼世界的二万五千里长征。长征历时两年，行程约二万五千里，是人类历史上的伟大壮举。",
+        "quote": "长征是宣言书，长征是宣传队，长征是播种机。——毛泽东",
+        "tags": ["长征", "第五次反围剿", "战略转移", "壮举"],
+        "brief": "中央红军从瑞金出发，开始伟大的二万五千里长征。"
+    },
+    {
+        "id": 11,
+        "name": "血战独树镇",
+        "lat": 33.0286,
+        "lon": 112.9465,
+        "date": "1934-11-22",
+        "dateLabel": "1934年11月22日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Dushuzhen_Battle.jpg",
+        "color": "#C41E3A",
+        "location": "河南省方城县独树镇",
+        "story": "1934年11月22日，红二十五军在独树镇遭国民党军伏击。在生死存亡关头，程子华、吴焕先指挥部队奋勇反击，粉碎了敌人的围歼企图。",
+        "quote": "红二十五军，血战独树。",
+        "tags": ["独树镇", "红二十五军", "吴焕先", "血战"],
+        "brief": "红二十五军血战独树镇，粉碎敌军围歼企图。"
+    },
+    {
+        "id": 12,
+        "name": "湘江战役",
+        "lat": 25.6,
+        "lon": 111.1,
+        "date": "1934-11-27",
+        "dateLabel": "1934年11月27日-12月1日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Battle_Xiangjiang.jpg",
+        "color": "#C41E3A",
+        "location": "广西壮族自治区全州县、兴安县",
+        "story": "1934年11月27日至12月1日，中央红军在湘江上游广西境内与国民党军队激战。红军与优势敌军苦战五昼夜，终于渡过湘江，但也损失惨重。",
+        "quote": "三年不饮湘江水，十年不食湘江鱼。",
+        "tags": ["湘江战役", "湘江", "惨烈", "突破封锁"],
+        "brief": "中央红军突破国民党第四道封锁线的惨烈战役。"
+    },
+    {
+        "id": 13,
+        "name": "遵义会议",
+        "lat": 27.7254,
+        "lon": 106.9273,
+        "date": "1935-01-15",
+        "dateLabel": "1935年1月15日",
+        "type": "meeting",
+        "icon": "🏛️",
+        "img": "Image/新的征程.jpg",
+        "color": "#DAA520",
+        "location": "贵州省遵义市红花岗区",
+        "story": "1935年1月15日至17日，中共中央在遵义召开政治局扩大会议，史称\"遵义会议\"。会议批判了第五次反\"围剿\"以来中央\"最高三人团\"在军事领导上的错误，肯定了以毛泽东为代表的正确路线。遵义会议是中国共产党历史上一个生死攸关的转折点，挽救了党、挽救了红军、挽救了中国革命。",
+        "quote": "遵义会议以后，中国革命打开了新局面，不断从胜利走向新的胜利。",
+        "tags": ["转折点", "生死攸关", "毛泽东", "军事指挥"],
+        "brief": "中国共产党历史上生死攸关的伟大转折点，确立了毛泽东在党和红军中的领导地位。"
+    },
+    {
+        "id": 14,
+        "name": "四渡赤水",
+        "lat": 28.58,
+        "lon": 106.32,
+        "date": "1935-01-29",
+        "dateLabel": "1935年1月-3月",
+        "type": "crossing",
+        "icon": "🌊",
+        "img": "Image/Four_Crossings_Chishui.jpg",
+        "color": "#4FC3F7",
+        "location": "贵州省、四川省、云南省交界",
+        "story": "四渡赤水战役是中央红军在长征中处于国民党几十万重兵围追堵截的艰险条件下进行的一次决定性运动战战役。在毛泽东、周恩来、朱德等指挥下，中央红军采取高度机动的运动战方针，共歼灭和击溃国民党军队4个师，取得了战略转移中具有决定意义的胜利。",
+        "quote": "四渡赤水是我军军事生涯中的\"得意之笔\"。——毛泽东",
+        "tags": ["四渡", "得意之笔", "运动战", "经典战例"],
+        "brief": "毛泽东军事生涯的\"得意之笔\"，红军摆脱围追堵截的关键战役。"
+    },
+    {
+        "id": 15,
+        "name": "巧渡金沙江",
+        "lat": 26.2275,
+        "lon": 102.634,
+        "date": "1935-05-03",
+        "dateLabel": "1935年5月3日-9日",
+        "type": "crossing",
+        "icon": "🌊",
+        "img": "Image/Crossing_Jinsha_River.jpg",
+        "color": "#4FC3F7",
+        "location": "云南省禄劝县皎平渡",
+        "story": "1935年5月3日至9日，中央红军在云南禄劝皎平渡巧渡金沙江。红军利用7只渡船，经过9天9夜的抢渡，3万红军全部渡过金沙江，彻底摆脱了国民党几十万大军的围追堵截，实现了渡江北上的战略意图。",
+        "quote": "巧渡金沙江，跳出包围圈。",
+        "tags": ["金沙江", "皎平渡", "战略转移", "跳出包围"],
+        "brief": "红军巧渡金沙江，彻底摆脱国民党大军的围追堵截。"
+    },
+    {
+        "id": 16,
+        "name": "强渡大渡河",
+        "lat": 29.2345,
+        "lon": 102.3747,
+        "date": "1935-05-25",
+        "dateLabel": "1935年5月25日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Storming_Dadu_River.jpg",
+        "color": "#C41E3A",
+        "location": "四川省石棉县安顺场",
+        "story": "1935年5月25日，中央红军红一军团红一师红一团17名勇士组成渡河突击队，在四川安顺场强渡大渡河。随后红军主力沿大渡河北上，飞夺泸定桥，粉碎了蒋介石企图使红军成为\"石达开第二\"的梦想。",
+        "quote": "强渡大渡河，红军英雄谱。",
+        "tags": ["大渡河", "安顺场", "17勇士", "飞夺泸定桥"],
+        "brief": "17勇士强渡大渡河，为红军北上打开通道。"
+    },
+    {
+        "id": 17,
+        "name": "飞夺泸定桥",
+        "lat": 29.9097,
+        "lon": 102.2397,
+        "date": "1935-05-29",
+        "dateLabel": "1935年5月29日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Flying_Luding_Bridge.jpg",
+        "color": "#C41E3A",
+        "location": "四川省泸定县泸定桥",
+        "story": "1935年5月29日，红四团官兵在大雨中昼夜兼程240华里，于凌晨6时赶到泸定桥。22名突击队员冒着敌人的枪林弹雨，攀爬铁索飞夺泸定桥，为红军主力打开了北上通道。",
+        "quote": "铁索桥上显英雄，红军精神永传颂。",
+        "tags": ["泸定桥", "22勇士", "铁索", "北上通道"],
+        "brief": "22勇士飞夺泸定桥，红军主力胜利通过天险。"
+    },
+    {
+        "id": 18,
+        "name": "翻越夹金山",
+        "lat": 30.7458,
+        "lon": 102.7255,
+        "date": "1935-06-12",
+        "dateLabel": "1935年6月12日",
+        "type": "crossing",
+        "icon": "🏔️",
+        "img": "/Image/Crossing_Mount_Jiajin.jpg",
+        "color": "#4FC3F7",
+        "location": "四川省宝兴县夹金山",
+        "story": "1935年6月12日，中央红军翻越夹金山。夹金山海拔4000多米，终年积雪、空气稀薄，人称\"神仙山\"。红军战士以钢铁般的意志，克服恶劣的自然条件，成功翻越长征路上第一座大雪山。",
+        "quote": "夹金山，高又高，红军战士钢铁腰。",
+        "tags": ["夹金山", "大雪山", "长征", "钢铁意志"],
+        "brief": "红军翻越长征第一座大雪山——夹金山。"
+    },
+    {
+        "id": 19,
+        "name": "懋功会师",
+        "lat": 31.1686,
+        "lon": 102.8257,
+        "date": "1935-06-18",
+        "dateLabel": "1935年6月18日",
+        "type": "meeting",
+        "icon": "🤝",
+        "img": "Image/Maogong_Gathering.jpg",
+        "color": "#DAA520",
+        "location": "四川省小金县懋功镇",
+        "story": "1935年6月18日，中共中央和中央红军到达懋功，与红四方面军胜利会师。两大主力红军会师，总兵力达10万余人，大大增强了红军的力量，为开创中国革命新局面创造了条件。",
+        "quote": "两大主力会师，革命力量大增。",
+        "tags": ["会师", "两大主力", "红四方面军", "新局面"],
+        "brief": "中央红军与红四方面军胜利会师，革命力量空前增强。"
+    },
+    {
+        "id": 20,
+        "name": "过草地",
+        "lat": 32.8831,
+        "lon": 102.9045,
+        "date": "1935-08-21",
+        "dateLabel": "1935年8月21日-26日",
+        "type": "crossing",
+        "icon": "🌾",
+        "img": "Image/Cross_The_Grassland.jpg",
+        "color": "#4FC3F7",
+        "location": "四川省松潘县草地",
+        "story": "1935年8月21日，红军开始穿越松潘草地。草地荒无人烟，气候恶劣，沼泽遍布，是长征中最艰难的路段之一。红军以惊人的毅力，克服了饥饿、寒冷、疾病等重重困难，于8月26日走出草地。",
+        "quote": "风雨浸衣骨更硬，野菜充饥志越坚。——萧华",
+        "tags": ["草地", "松潘", "艰难", "毅力"],
+        "brief": "红军穿越荒无人烟的草地，创造了人类历史上的奇迹。"
+    },
+    {
+        "id": 21,
+        "name": "腊子口战役",
+        "lat": 34.0707,
+        "lon": 103.8869,
+        "date": "1935-09-16",
+        "dateLabel": "1935年9月16日-17日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Lazikou_Battle.jpg",
+        "color": "#C41E3A",
+        "location": "甘肃省迭部县腊子口",
+        "story": "1935年9月16日至17日，红四团攻克天险腊子口。腊子口是川西北通往甘肃的咽喉要道，两侧悬崖绝壁，中间有一条深不见底的腊子河。红军通过正面强攻和侧翼迂回相结合，终于攻克这一天险，打开了北上进入陕甘的通道。",
+        "quote": "攻克腊子口，北上通路开。",
+        "tags": ["腊子口", "天险", "北上通道", "战役"],
+        "brief": "红军攻克天险腊子口，打开北上陕甘的通道。"
+    },
+    {
+        "id": 22,
+        "name": "吴起镇会师",
+        "lat": 36.9056,
+        "lon": 108.1781,
+        "date": "1935-10-19",
+        "dateLabel": "1935年10月19日",
+        "type": "meeting",
+        "icon": "🏠",
+        "img": "Image/Wuqi_Town_Meeting.jpg",
+        "color": "#DAA520",
+        "location": "陕西省吴起县吴起镇",
+        "story": "1935年10月19日，中共中央率领中央红军陕甘支队到达陕北吴起镇，与陕北红军胜利会师。吴起镇会师标志着中央红军长征胜利结束。",
+        "quote": "长征胜利结束，陕北成为革命大本营。",
+        "tags": ["吴起镇", "会师", "长征结束", "陕北"],
+        "brief": "中央红军到达陕北吴起镇，长征胜利结束。"
+    },
+    {
+        "id": 23,
+        "name": "瓦窑堡会议",
+        "lat": 37.2095,
+        "lon": 110.0132,
+        "date": "1935-12-17",
+        "dateLabel": "1935年12月17日-25日",
+        "type": "meeting",
+        "icon": "🏛️",
+        "img": "Image/Wabao_Kiln_Conference.jpg",
+        "color": "#DAA520",
+        "location": "陕西省子长县瓦窑堡镇",
+        "story": "1935年12月17日至25日，中共中央在瓦窑堡召开政治局扩大会议。会议制定了抗日民族统一战线的策略方针，确定了建立广泛的抗日民族统一战线的政治路线，推动了全国抗日民主运动的发展。",
+        "quote": "建立抗日民族统一战线，团结一切可以团结的力量。",
+        "tags": ["瓦窑堡", "抗日统一战线", "策略方针", "政治路线"],
+        "brief": "瓦窑堡会议确定抗日民族统一战线的策略方针。"
+    },
+    {
+        "id": 24,
+        "name": "东北抗联",
+        "lat": 45.8031,
+        "lon": 126.5349,
+        "date": "1936-01-28",
+        "dateLabel": "1936年1月28日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Northeast_Anti_Japanese.jpg",
+        "color": "#C41E3A",
+        "location": "黑龙江省牡丹江市",
+        "story": "1936年1月28日，东北人民革命军第一军等改编为东北抗日联军。抗联在极其艰苦的条件下坚持抗日斗争十四年。",
+        "quote": "白山黑水，抗日英魂。",
+        "tags": ["东北抗联", "抗日联军", "杨靖宇", "赵一曼"],
+        "brief": "东北抗日联军在白山黑水间坚持抗日十四年。"
+    },
+    {
+        "id": 25,
+        "name": "西安事变",
+        "lat": 34.2634,
+        "lon": 108.9481,
+        "date": "1936-12-12",
+        "dateLabel": "1936年12月12日",
+        "type": "meeting",
+        "icon": "🕊️",
+        "img": "/Image/Xian_Incident.jpg",
+        "color": "#DAA520",
+        "location": "陕西省西安市临潼区华清池",
+        "story": "1936年12月12日，张学良、杨虎城在西安扣留蒋介石，逼蒋抗日，史称\"西安事变\"。中共中央派周恩来等赴西安调解，推动事变和平解决。西安事变的和平解决成为时局转换的枢纽，十年内战基本结束，抗日民族统一战线初步形成。",
+        "quote": "西安事变和平解决，抗日民族统一战线初步形成。",
+        "tags": ["西安事变", "张学良", "杨虎城", "抗日民族统一战线"],
+        "brief": "西安事变和平解决，成为时局转换的枢纽。"
+    },
+    {
+        "id": 26,
+        "name": "七七事变",
+        "lat": 39.8575,
+        "lon": 116.2178,
+        "date": "1937-07-07",
+        "dateLabel": "1937年7月7日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Lugou_Bridge_Incident.jpg",
+        "color": "#C41E3A",
+        "location": "北京市丰台区卢沟桥",
+        "story": "1937年7月7日夜，日军在北平卢沟桥附近制造事端，向中国守军发起进攻，中国守军奋起抵抗，史称\"七七事变\"。七七事变标志着日本全面侵华战争的开始，也标志着中国全民族抗战的开始。",
+        "quote": "七七事变，全民族抗战开始。",
+        "tags": ["卢沟桥", "全面抗战", "民族危亡", "抗日"],
+        "brief": "七七事变标志着日本全面侵华和中国全民族抗战开始。"
+    },
+    {
+        "id": 27,
+        "name": "平型关大捷",
+        "lat": 39.3247,
+        "lon": 113.9223,
+        "date": "1937-09-25",
+        "dateLabel": "1937年9月25日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Pingxingguan_Victory.jpg",
+        "color": "#C41E3A",
+        "location": "山西省大同市灵丘县平型关",
+        "story": "1937年9月25日，八路军第一一五师在山西灵丘平型关伏击日军，歼灭日军1000余人，击毁汽车100余辆。平型关大捷是全国抗战爆发后中国军队主动对日作战取得的第一个重大胜利，极大地振奋了全国的抗战信心。",
+        "quote": "平型关大捷，振奋全国抗战信心。",
+        "tags": ["平型关", "首次大捷", "八路军", "抗战信心"],
+        "brief": "八路军平型关首战告捷，全国抗战首次重大胜利。"
+    },
+    {
+        "id": 28,
+        "name": "雁门关大捷",
+        "lat": 40.2743,
+        "lon": 112.3076,
+        "date": "1937-10-18",
+        "dateLabel": "1937年10月18日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Yanmen_Pass_Battle.jpg",
+        "color": "#C41E3A",
+        "location": "山西省忻州市雁门关",
+        "story": "1937年10月18日，八路军120师在雁门关设伏，击毁日军汽车100余辆，切断了忻口日军的后方补给线。",
+        "quote": "雁门关大捷，断敌补给线。",
+        "tags": ["雁门关", "伏击战", "120师", "贺龙"],
+        "brief": "八路军雁门关伏击战，切断日军补给线。"
+    },
+    {
+        "id": 29,
+        "name": "阳明堡机场",
+        "lat": 38.4283,
+        "lon": 112.6967,
+        "date": "1937-10-19",
+        "dateLabel": "1937年10月19日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Yangmingbao_Raid.jpg",
+        "color": "#C41E3A",
+        "location": "山西省代县阳明堡",
+        "story": "1937年10月19日夜，八路军129师769团在团长陈锡联指挥下，突袭阳明堡日军飞机场，毁伤敌机24架，有力地支援了忻口战役。",
+        "quote": "夜袭阳明堡，烧毁敌机24架。",
+        "tags": ["阳明堡", "夜袭", "769团", "陈锡联"],
+        "brief": "八路军夜袭阳明堡机场，毁伤敌机24架。"
+    },
+    {
+        "id": 30,
+        "name": "南京保卫战",
+        "lat": 32.0603,
+        "lon": 118.7969,
+        "date": "1937-12-01",
+        "dateLabel": "1937年12月1日-13日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Nanjing_Defense.jpg",
+        "color": "#C41E3A",
+        "location": "江苏省南京市",
+        "story": "1937年12月1日至13日，中国军队在南京与日军展开激烈战斗。守军将士浴血奋战，表达了中华民族不屈不挠的精神。",
+        "quote": "誓死保卫南京！",
+        "tags": ["南京保卫战", "南京", "唐生智", "英勇抵抗"],
+        "brief": "中国军队在南京与日军展开殊死搏斗。"
+    },
+    {
+        "id": 31,
+        "name": "台儿庄战役",
+        "lat": 34.6085,
+        "lon": 117.7207,
+        "date": "1938-03-16",
+        "dateLabel": "1938年3月16日-4月15日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Taierzhuang_Battle.jpg",
+        "color": "#C41E3A",
+        "location": "山东省枣庄市台儿庄",
+        "story": "1938年3月至4月，第五战区司令长官李宗仁指挥中国军队在台儿庄与日军激战，歼敌万余人。台儿庄大捷是抗战以来正面战场首次重大胜利。",
+        "quote": "台儿庄大捷，振奋全国人心！",
+        "tags": ["台儿庄", "李宗仁", "首次大捷", "正面战场"],
+        "brief": "台儿庄大捷，抗战正面战场首次重大胜利。"
+    },
+    {
+        "id": 32,
+        "name": "昆仑关战役",
+        "lat": 23.23,
+        "lon": 108.43,
+        "date": "1939-12-18",
+        "dateLabel": "1939年12月18日-31日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Kunlun_Pass_Battle.jpg",
+        "color": "#C41E3A",
+        "location": "广西壮族自治区南宁市昆仑关",
+        "story": "1939年12月至次年1月，中国军队在杜聿明指挥下发起昆仑关战役，攻克昆仑关，歼灭日军4000余人。",
+        "quote": "血战昆仑关，壮志饥餐胡虏肉。",
+        "tags": ["昆仑关", "杜聿明", "攻坚战", "第五军"],
+        "brief": "中国军队血战昆仑关，攻克天险。"
+    },
+    {
+        "id": 33,
+        "name": "百团大战",
+        "lat": 37.857,
+        "lon": 113.5484,
+        "date": "1940-08-20",
+        "dateLabel": "1940年8月20日-12月5日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Hundred_Regiments_Offensive.jpg",
+        "color": "#C41E3A",
+        "location": "华北地区",
+        "story": "1940年8月20日至12月5日，八路军在华北发动大规模交通破袭战，参战部队达105个团，故名\"百团大战\"。百团大战沉重打击了日军的\"囚笼政策\"，振奋了全国抗战信心，提高了中国共产党和八路军的威望。",
+        "quote": "百团大战，振奋全国。",
+        "tags": ["百团大战", "105团", "囚笼政策", "交通破袭战"],
+        "brief": "八路军发动百团大战，沉重打击日军，振奋全国抗战信心。"
+    },
+    {
+        "id": 34,
+        "name": "狼牙山五壮士",
+        "lat": 39.3495,
+        "lon": 115.4796,
+        "date": "1941-09-25",
+        "dateLabel": "1941年9月25日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Five_Heroes_Langya_Mountain.jpg",
+        "color": "#C41E3A",
+        "location": "河北省保定市易县",
+        "story": "1941年9月25日，八路军晋察冀一分区一团七连六班马宝玉、胡德林、胡福才、葛振林、宋学义在狼牙山掩护群众转移后，英勇跳崖。",
+        "quote": "打倒日本帝国主义！中国共产党万岁！",
+        "tags": ["狼牙山", "五壮士", "英勇跳崖", "气壮山河"],
+        "brief": "狼牙山五壮士英勇跳崖，气壮山河。"
+    },
+    {
+        "id": 35,
+        "name": "第三次长沙会战",
+        "lat": 28.2282,
+        "lon": 112.9388,
+        "date": "1941-12-24",
+        "dateLabel": "1941年12月24日-1942年1月15日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Third_Changsha_Battle.jpg",
+        "color": "#C41E3A",
+        "location": "湖南省长沙市",
+        "story": "1941年12月至1942年1月，第九战区司令长官薛岳指挥中国军队在长沙地区与日军会战，歼敌5万余人。第三次长沙会战是太平洋战争爆发后盟军的首次胜利。",
+        "quote": "天炉战法，歼敌五万。",
+        "tags": ["长沙会战", "薛岳", "天炉战法", "长沙大捷"],
+        "brief": "第三次长沙大捷，歼敌五万余人。"
+    },
+    {
+        "id": 36,
+        "name": "地道战",
+        "lat": 39.15,
+        "lon": 116.42,
+        "date": "1942-05-01",
+        "dateLabel": "1942年5月-1945年",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Tunnel_Warfare.jpg",
+        "color": "#C41E3A",
+        "location": "河北省保定市清苑区",
+        "story": "1942年起，冉庄等地群众在党的领导下开挖地道，坚持抗日斗争。地道战成为华北人民打击日军的独特战法。",
+        "quote": "地道战打得鬼子魂飞胆丧！",
+        "tags": ["地道战", "冉庄", "人民战争", "华北"],
+        "brief": "冉庄人民创造性地开展地道战打击日军。"
+    },
+    {
+        "id": 37,
+        "name": "地雷战",
+        "lat": 37.5,
+        "lon": 121.2,
+        "date": "1943-06-01",
+        "dateLabel": "1943年6月起",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": 'Image/Landmine_Warfare.jpg',
+        "color": "#C41E3A",
+        "location": "山东省烟台市海阳县",
+        "story": "1943年起，海阳民兵开展地雷战，用土制地雷打击日伪军。地雷战使敌人闻雷丧胆，成为山东人民抗日的重要战法。",
+        "quote": "敌人一进村，就踏上了鬼门关。",
+        "tags": ["地雷战", "海阳", "民兵", "山东"],
+        "brief": "海阳民兵开展地雷战，打得日伪军闻雷丧胆。"
+    },
+    {
+        "id": 38,
+        "name": "七大召开",
+        "lat": 36.587,
+        "lon": 109.4899,
+        "date": "1945-04-23",
+        "dateLabel": "1945年4月23日-6月11日",
+        "type": "meeting",
+        "icon": "🏛️",
+        "img": "Image/The_7th_National_Congress_of_the_Chinese_Communist_Party.jpg",
+        "color": "#DAA520",
+        "location": "陕西省延安市杨家岭",
+        "story": "1945年4月23日至6月11日，中国共产党第七次全国代表大会在延安杨家岭中央大礼堂召开。七大确定了党的政治路线，确立毛泽东思想为党的指导思想并写入党章，为争取抗日战争的最后胜利和新民主主义革命在全国的胜利奠定了基础。",
+        "quote": "七大，团结的大会，胜利的大会。",
+        "tags": ["七大", "毛泽东思想", "指导思想", "胜利"],
+        "brief": "七大确立毛泽东思想为党的指导思想，为革命胜利奠定基础。"
+    },
+    {
+        "id": 39,
+        "name": "抗战胜利",
+        "lat": 39.9042,
+        "lon": 116.4074,
+        "date": "1945-08-15",
+        "dateLabel": "1945年8月15日",
+        "type": "meeting",
+        "icon": "🎉",
+        "img": "/Image/Victory_in_the_War_of_Resistance.jpg",
+        "color": "#DAA520",
+        "location": "北京市",
+        "story": "1945年8月15日，日本天皇宣布无条件投降。9月2日，日本正式签署投降书。中国人民抗日战争取得最后胜利。抗战胜利是近代以来中国人民第一次取得完全胜利的民族解放战争，是中华民族从衰败走向振兴的转折点。",
+        "quote": "抗战胜利，民族复兴的转折点。",
+        "tags": ["抗战胜利", "无条件投降", "民族复兴", "转折点"],
+        "brief": "日本宣布无条件投降，中国人民抗战取得最后胜利。"
+    },
+    {
+        "id": 40,
+        "name": "解放战争开始",
+        "lat": 36.587,
+        "lon": 109.4899,
+        "date": "1946-06-26",
+        "dateLabel": "1946年6月26日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Civil_War_Start.jpg",
+        "color": "#C41E3A",
+        "location": "陕西省延安市",
+        "story": "1946年6月26日，国民党军队大举进攻中原解放区，全面内战爆发。中国共产党领导解放区军民奋起反击，解放战争由此开始。经过三年多的英勇奋战，人民解放军推翻了国民党在大陆的统治。",
+        "quote": "解放战争，推翻国民党反动统治。",
+        "tags": ["解放战争", "全面内战", "人民解放军", "革命胜利"],
+        "brief": "全面内战爆发，解放战争开始。"
+    },
+    {
+        "id": 41,
+        "name": "西北三战三捷",
+        "lat": 35.5,
+        "lon": 109.5,
+        "date": "1947-03-25",
+        "dateLabel": "1947年3月25日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Three_Victories_Northwest.jpg",
+        "color": "#C41E3A",
+        "location": "陕西省延安市附近",
+        "story": "1947年3月至5月，西北野战兵团在彭德怀指挥下，连续取得青化砭、羊马河、蟠龙镇三次战斗胜利，稳定了西北战局。",
+        "quote": "三战三捷，稳定西北。",
+        "tags": ["彭德怀", "青化砭", "羊马河", "蟠龙镇"],
+        "brief": "西北野战军三战三捷，稳定西北战局。"
+    },
+    {
+        "id": 42,
+        "name": "孟良崮战役",
+        "lat": 35.78,
+        "lon": 118.6,
+        "date": "1947-05-13",
+        "dateLabel": "1947年5月13日-16日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Menglianggu_Battle.jpg",
+        "color": "#C41E3A",
+        "location": "山东省临沂市蒙阴县",
+        "story": "1947年5月，华东野战军在陈毅、粟裕指挥下，于孟良崮全歼国民党整编第七十四师3万余人，击毙师长张灵甫。",
+        "quote": "百万军中取上将首级。",
+        "tags": ["孟良崮", "张灵甫", "粟裕", "消灭74师"],
+        "brief": "华东野战军全歼国民党王牌整编74师。"
+    },
+    {
+        "id": 43,
+        "name": "千里跃进大别山",
+        "lat": 31.8312,
+        "lon": 115.7649,
+        "date": "1947-06-30",
+        "dateLabel": "1947年6月30日",
+        "type": "crossing",
+        "icon": "🚶",
+        "img": "Image/Three_Victories_Northwest.jpg",
+        "color": "#4FC3F7",
+        "location": "河南省濮阳县到湖北省大别山区",
+        "story": "1947年6月30日，刘伯承、邓小平率领晋冀鲁豫野战军主力12万人，强渡黄河，向大别山跃进。千里跃进大别山揭开了人民解放战争战略进攻的序幕，是中国革命战争史上的一个伟大转折点。",
+        "quote": "千里跃进大别山，战略进攻序幕拉开。",
+        "tags": ["刘邓大军", "大别山", "战略进攻", "转折点"],
+        "brief": "刘邓大军千里跃进大别山，揭开战略进攻序幕。"
+    },
+    {
+        "id": 44,
+        "name": "豫东战役",
+        "lat": 34.75,
+        "lon": 114.35,
+        "date": "1948-06-17",
+        "dateLabel": "1948年6月17日-7月6日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Eastern_Henan_Campaign.jpg",
+        "color": "#C41E3A",
+        "location": "河南省开封市",
+        "story": "1948年6月至7月，华东野战军在粟裕指挥下发起豫东战役，攻克开封，歼敌9万余人。这是人民解放军首次攻克国民党省会城市。",
+        "quote": "豫东大捷，首克省城。",
+        "tags": ["豫东战役", "开封", "粟裕", "首次攻克省会"],
+        "brief": "华东野战军攻克河南省会开封。"
+    },
+    {
+        "id": 45,
+        "name": "辽沈战役",
+        "lat": 41.8057,
+        "lon": 123.4315,
+        "date": "1948-09-12",
+        "dateLabel": "1948年9月12日-11月2日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Liaoshen_Campaign.jpg",
+        "color": "#C41E3A",
+        "location": "辽宁省沈阳市及周边",
+        "story": "1948年9月12日至11月2日，东北野战军在辽宁西部和沈阳、长春地区对国民党军队进行战略性决战，即辽沈战役。辽沈战役历时52天，共歼灭国民党军队47万余人，解放了东北全境，使人民解放军在数量上首次超过国民党军队。",
+        "quote": "辽沈战役，解放东北全境。",
+        "tags": ["辽沈战役", "三大战役", "东北全境", "战略决战"],
+        "brief": "辽沈战役打响战略决战第一炮，解放东北全境。"
+    },
+    {
+        "id": 46,
+        "name": "济南战役",
+        "lat": 36.6512,
+        "lon": 117.1201,
+        "date": "1948-09-16",
+        "dateLabel": "1948年9月16日-24日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Jinan_Campaign.jpg",
+        "color": "#C41E3A",
+        "location": "山东省济南市",
+        "story": "1948年9月，华东野战军发起济南战役，经8昼夜激战，全歼守敌10万余人，山东省会济南宣告解放。",
+        "quote": "打下济南府，活捉王耀武。",
+        "tags": ["济南战役", "王耀武", "华东野战军", "解放省城"],
+        "brief": "华东野战军攻克济南，全歼守敌10万。"
+    },
+    {
+        "id": 47,
+        "name": "塔山阻击战",
+        "lat": 40.8,
+        "lon": 121.2,
+        "date": "1948-10-10",
+        "dateLabel": "1948年10月10日-15日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Tashan_Defense_Battle.jpg",
+        "color": "#C41E3A",
+        "location": "辽宁省葫芦岛市塔山",
+        "story": "1948年10月10日至15日，东北野战军第四纵队、第十一纵队在塔山阻击国民党军增援锦州，保障了辽沈战役的顺利进行。",
+        "quote": "誓与塔山共存亡！",
+        "tags": ["塔山阻击战", "死守", "四纵", "辽沈战役"],
+        "brief": "东北野战军塔山阻击战，保障锦州攻坚。"
+    },
+    {
+        "id": 48,
+        "name": "黑山阻击战",
+        "lat": 41.95,
+        "lon": 122.1,
+        "date": "1948-10-23",
+        "dateLabel": "1948年10月23日-28日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Heishan_Defense_Battle.jpg",
+        "color": "#C41E3A",
+        "location": "辽宁省锦州市黑山县",
+        "story": "1948年10月23日至28日，东北野战军第十纵队在黑山、大虎山地区阻击国民党军西进援锦，为全歼廖耀湘兵团创造了条件。",
+        "quote": "寸土必争，死守黑山。",
+        "tags": ["黑山阻击战", "十纵", "廖耀湘", "辽西会战"],
+        "brief": "东北野战军黑山阻击战，为全歼敌军创造条件。"
+    },
+    {
+        "id": 49,
+        "name": "淮海战役",
+        "lat": 34.2,
+        "lon": 117.3,
+        "date": "1948-11-06",
+        "dateLabel": "1948年11月6日-1949年1月10日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Huaihai_Campaign.jpg",
+        "color": "#C41E3A",
+        "location": "以徐州为中心的淮海地区",
+        "story": "1948年11月6日至1949年1月10日，华东野战军和中原野战军在以徐州为中心的淮海地区对国民党军队进行战略决战，即淮海战役。淮海战役历时66天，共歼灭国民党军队55万余人，解放了长江以北的华东、中原地区，为渡江战役创造了有利条件。",
+        "quote": "淮海战役的胜利，是人民群众用小车推出来的。——陈毅",
+        "tags": ["淮海战役", "三大战役", "人民群众", "小车"],
+        "brief": "淮海战役胜利，长江以北基本解放，为渡江战役奠定基础。"
+    },
+    {
+        "id": 50,
+        "name": "平津战役",
+        "lat": 39.9042,
+        "lon": 116.4074,
+        "date": "1948-11-29",
+        "dateLabel": "1948年11月29日-1949年1月31日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Beiping_Tianjin_Campaign.jpg",
+        "color": "#C41E3A",
+        "location": "北平、天津、张家口地区",
+        "story": "1948年11月29日至1949年1月31日，东北野战军和华北军区部队在北平、天津、张家口地区对国民党军队进行战略决战，即平津战役。平津战役历时64天，共歼灭和改编国民党军队52万余人，北平和平解放，华北地区基本解放。",
+        "quote": "北平和平解放，千年古都免遭战火。",
+        "tags": ["平津战役", "三大战役", "和平解放", "古都"],
+        "brief": "平津战役胜利，北平和平解放，华北地区基本解放。"
+    },
+    {
+        "id": 51,
+        "name": "天津战役",
+        "lat": 39.1255,
+        "lon": 117.1909,
+        "date": "1949-01-14",
+        "dateLabel": "1949年1月14日-15日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Tianjin_Campaign.jpg",
+        "color": "#C41E3A",
+        "location": "天津市",
+        "story": "1949年1月14日，东北野战军发起天津战役，经29小时激战，全歼守军13万人，天津宣告解放。",
+        "quote": "天津29小时，解放华北重镇。",
+        "tags": ["天津战役", "刘亚楼", "东北野战军", "解放天津"],
+        "brief": "东北野战军29小时解放天津。"
+    },
+    {
+        "id": 52,
+        "name": "七届二中全会",
+        "lat": 38.2568,
+        "lon": 114.6195,
+        "date": "1949-03-05",
+        "dateLabel": "1949年3月5日-13日",
+        "type": "meeting",
+        "icon": "🏛️",
+        "img": "/Image/The_7th_National_Congress_of_the_Chinese_Communist_Party.jpg",
+        "color": "#DAA520",
+        "location": "河北省平山县西柏坡村",
+        "story": "1949年3月5日至13日，中国共产党在西柏坡召开七届二中全会。会议决定将党的工作重心由农村转到城市，规定了全国胜利后党在政治、经济、外交方面的基本政策，提出了\"两个务必\"的要求。",
+        "quote": "务必使同志们继续地保持谦虚、谨慎、不骄、不躁的作风，务必使同志们继续地保持艰苦奋斗的作风。——毛泽东",
+        "tags": ["西柏坡", "七届二中全会", "工作重心", "两个务必"],
+        "brief": "七届二中全会决定工作重心由农村转向城市，提出\"两个务必\"。"
+    },
+    {
+        "id": 53,
+        "name": "渡江战役",
+        "lat": 31.2304,
+        "lon": 121.4737,
+        "date": "1949-04-21",
+        "dateLabel": "1949年4月21日-6月2日",
+        "type": "crossing",
+        "icon": "🌊",
+        "img": "Image/Beiping_Tianjin_Campaign.jpg",
+        "color": "#4FC3F7",
+        "location": "长江中下游地区",
+        "story": "1949年4月21日，毛泽东、朱德发布向全国进军的命令。人民解放军百万雄师在西起湖口、东至江阴的千里战线上强渡长江。4月23日，南京解放，国民党政权在大陆的统治覆灭。",
+        "quote": "宜将剩勇追穷寇，不可沽名学霸王。——毛泽东",
+        "tags": ["渡江战役", "百万雄师", "南京解放", "追穷寇"],
+        "brief": "百万雄师过大江，南京解放，国民党统治覆灭。"
+    },
+    {
+        "id": 54,
+        "name": "上海战役",
+        "lat": 31.2304,
+        "lon": 121.4737,
+        "date": "1949-05-12",
+        "dateLabel": "1949年5月12日-27日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Shanghai_Campaign.jpg",
+        "color": "#C41E3A",
+        "location": "上海市",
+        "story": "1949年5月12日至27日，第三野战军发起上海战役，歼敌15万余人，解放了中国最大的城市上海。",
+        "quote": "上海，我们回来了！",
+        "tags": ["上海战役", "陈毅", "三野", "解放上海"],
+        "brief": "第三野战军发起上海战役，解放中国最大城市。"
+    },
+    {
+        "id": 55,
+        "name": "开国大典",
+        "lat": 39.9087,
+        "lon": 116.3975,
+        "date": "1949-10-01",
+        "dateLabel": "1949年10月1日",
+        "type": "meeting",
+        "icon": "🇨🇳",
+        "img": "/Image/Founding_Ceremony_of_the_Nation.jpg",
+        "color": "#DAA520",
+        "location": "北京市天安门广场",
+        "story": "1949年10月1日，中华人民共和国开国大典在北京天安门广场隆重举行。毛泽东在天安门城楼上庄严宣告中华人民共和国中央人民政府成立。中国人民从此站起来了，中华民族开启了新的历史纪元。",
+        "quote": "中华人民共和国中央人民政府今天成立了！——毛泽东",
+        "tags": ["开国大典", "新中国成立", "天安门", "新纪元"],
+        "brief": "中华人民共和国成立，中国人民从此站起来了！"
+    },
+    {
+        "id": 56,
+        "name": "抗美援朝",
+        "lat": 38.0368,
+        "lon": 124.7002,
+        "date": "1950-10-19",
+        "dateLabel": "1950年10月19日-1953年7月27日",
+        "type": "battle",
+        "icon": "⚔️",
+        "img": "Image/Korean_War.jpg",
+        "color": "#C41E3A",
+        "location": "朝鲜半岛",
+        "story": "1950年10月，中国人民志愿军赴朝作战，抗美援朝战争开始。经过两年零九个月的浴血奋战，1953年7月，美国被迫在停战协定上签字。抗美援朝战争的胜利，保卫了中国安全，维护了亚洲和世界和平。",
+        "quote": "雄赳赳，气昂昂，跨过鸭绿江！——《中国人民志愿军战歌》",
+        "tags": ["抗美援朝", "志愿军", "保家卫国", "和平"],
+        "brief": "中国人民志愿军赴朝作战，抗美援朝保家卫国。"
+    },
+    {
+        "id": 57,
+        "name": "大庆油田",
+        "lat": 46.59,
+        "lon": 124.84,
+        "date": "1959-09-26",
+        "dateLabel": "1959年9月26日",
+        "type": "meeting",
+        "icon": "🛢️",
+        "img": "Image/Daqing_Oilfield.jpg",
+        "color": "#DAA520",
+        "location": "黑龙江省大庆市",
+        "story": "1959年9月26日，松辽盆地松基三井喷出工业油流，大庆油田被发现。大庆油田的开发，摘掉了中国\"贫油\"的帽子。",
+        "quote": "工业学大庆！",
+        "tags": ["大庆油田", "王进喜", "工业学大庆", "摘掉贫油帽子"],
+        "brief": "大庆油田发现，摘掉中国贫油帽子。"
+    },
+    {
+        "id": 58,
+        "name": "红旗渠",
+        "lat": 36.25,
+        "lon": 113.77,
+        "date": "1960-02-11",
+        "dateLabel": "1960年2月11日",
+        "type": "meeting",
+        "icon": "🏗️",
+        "img": "Image/Red_Flag_Canal.jpg",
+        "color": "#DAA520",
+        "location": "河南省林州市",
+        "story": "1960年2月，林县人民开始修建红旗渠。经过十年奋战，在太行山悬崖峭壁上修成全长1500公里的\"人工天河\"。",
+        "quote": "劈开太行山，漳河穿山来。",
+        "tags": ["红旗渠", "林县", "人工天河", "自力更生"],
+        "brief": "林县人民修建红旗渠，创造了人间奇迹。"
+    },
+    {
+        "id": 59,
+        "name": "焦裕禄",
+        "lat": 34.7648,
+        "lon": 114.3512,
+        "date": "1962-12-01",
+        "dateLabel": "1962年12月",
+        "type": "meeting",
+        "icon": "🌳",
+        "img": "Image/Jiao_Yulu.jpg",
+        "color": "#DAA520",
+        "location": "河南省兰考县",
+        "story": "1962年12月，焦裕禄任兰考县委书记。他带领全县人民治理内涝、风沙、盐碱三大灾害，直到生命的最后一刻。",
+        "quote": "绿我涓滴，会它千顷澄碧。",
+        "tags": ["焦裕禄", "兰考", "治理三害", "县委书记好榜样"],
+        "brief": "焦裕禄带领兰考人民治理三害，留下宝贵精神财富。"
+    },
+    {
+        "id": 60,
+        "name": "两弹一星",
+        "lat": 40,
+        "lon": 98,
+        "date": "1964-10-16",
+        "dateLabel": "1964年10月16日",
+        "type": "meeting",
+        "icon": "🚀",
+        "img": "/Image/Two_Bombs_And_One_Satellite.jpg",
+        "color": "#DAA520",
+        "location": "新疆罗布泊",
+        "story": "1964年10月16日，中国第一颗原子弹爆炸成功。1967年6月17日，中国第一颗氢弹爆炸成功。1970年4月24日，中国第一颗人造地球卫星\"东方红一号\"发射成功。\"两弹一星\"的成功研制，打破了美苏核垄断，增强了中国的国防实力。",
+        "quote": "两弹一星，国之重器。",
+        "tags": ["两弹一星", "原子弹", "氢弹", "人造卫星"],
+        "brief": "两弹一星研制成功，打破核垄断，增强国防实力。"
+    },
+    {
+        "id": 61,
+        "name": "袁隆平杂交水稻",
+        "lat": 28.2,
+        "lon": 112.93,
+        "date": "1973-07-01",
+        "dateLabel": "1973年7月",
+        "type": "meeting",
+        "icon": "🌾",
+        "img": "Image/Yuan_Longping.jpg",
+        "color": "#DAA520",
+        "location": "湖南省长沙市",
+        "story": "1973年，袁隆平培育出世界上第一个实用高产杂交水稻品种\"南优2号\"，解决了中国人民的吃饭问题。",
+        "quote": "一粒种子，改变世界。",
+        "tags": ["袁隆平", "杂交水稻", "粮食安全", "世界粮仓"],
+        "brief": "袁隆平培育杂交水稻，解决了中国人民吃饭问题。"
+    },
+    {
+        "id": 62,
+        "name": "十一届三中全会",
+        "lat": 39.9087,
+        "lon": 116.3975,
+        "date": "1978-12-18",
+        "dateLabel": "1978年12月18日-22日",
+        "type": "meeting",
+        "icon": "🏛️",
+        "img": "/Image/The_Third_Plenary_Session_of the_11th_Central_Committee.jpg",
+        "color": "#DAA520",
+        "location": "北京市",
+        "story": "1978年12月18日至22日，中国共产党十一届三中全会在北京召开。全会确立了解放思想、实事求是的思想路线，作出把党和国家工作重心转移到经济建设上来、实行改革开放的历史性决策，开启了改革开放和社会主义现代化建设新时期。",
+        "quote": "实践是检验真理的唯一标准。",
+        "tags": ["十一届三中全会", "改革开放", "工作重心", "新时期"],
+        "brief": "十一届三中全会召开，开启改革开放和现代化建设新时期。"
+    },
+    {
+        "id": 63,
+        "name": "改革开放",
+        "lat": 22.5431,
+        "lon": 114.0579,
+        "date": "1980-08-26",
+        "dateLabel": "1980年8月26日",
+        "type": "meeting",
+        "icon": "🏗️",
+        "img": "/Image/Reform_and_Opening-up.jpg",
+        "color": "#DAA520",
+        "location": "广东省深圳市",
+        "story": "1980年8月，全国人大常委会批准在深圳、珠海、汕头、厦门设立经济特区。深圳等经济特区的建立，拉开了中国改革开放的序幕。40多年来，改革开放使中国发生了翻天覆地的变化。",
+        "quote": "时间就是金钱，效率就是生命。——深圳特区口号",
+        "tags": ["改革开放", "经济特区", "深圳", "翻天覆地"],
+        "brief": "经济特区建立，改革开放拉开序幕，中国快速发展。"
+    },
+    {
+        "id": 64,
+        "name": "香港回归",
+        "lat": 22.3193,
+        "lon": 114.1694,
+        "date": "1997-07-01",
+        "dateLabel": "1997年7月1日",
+        "type": "meeting",
+        "icon": "🎊",
+        "img": "/Image/Hong Kong_return.jpg",
+        "color": "#DAA520",
+        "location": "香港特别行政区",
+        "story": "1997年7月1日，中英两国政府在香港举行了香港政权交接仪式，中国政府对香港恢复行使主权，中华人民共和国香港特别行政区成立。香港回归是\"一国两制\"伟大构想的成功实践。",
+        "quote": "香港回归，一国两制成功实践。",
+        "tags": ["香港回归", "一国两制", "百年国耻", "洗雪"],
+        "brief": "香港回归祖国，\"一国两制\"成功实践。"
+    },
+    {
+        "id": 65,
+        "name": "澳门回归",
+        "lat": 22.1987,
+        "lon": 113.5439,
+        "date": "1999-12-20",
+        "dateLabel": "1999年12月20日",
+        "type": "meeting",
+        "icon": "🎊",
+        "img": "/Image/Macau_return.jpg",
+        "color": "#DAA520",
+        "location": "澳门特别行政区",
+        "story": "1999年12月20日，中葡两国政府在澳门举行了澳门政权交接仪式，中国政府对澳门恢复行使主权，中华人民共和国澳门特别行政区成立。澳门回归是\"一国两制\"伟大构想的又一成功实践。",
+        "quote": "澳门回归，祖国统一大业又迈一步。",
+        "tags": ["澳门回归", "一国两制", "祖国统一", "成功实践"],
+        "brief": "澳门回归祖国，\"一国两制\"再次成功实践。"
+    },
+    {
+        "id": 66,
+        "name": "西部大开发",
+        "lat": 29.86,
+        "lon": 106.55,
+        "date": "2000-01-01",
+        "dateLabel": "2000年1月",
+        "type": "meeting",
+        "icon": "🏗️",
+        "img": "Image/Western_Development.jpg",
+        "color": "#DAA520",
+        "location": "重庆市（西部代表城市）",
+        "story": "2000年1月，党中央、国务院作出实施西部大开发战略的重大决策，旨在加快西部地区发展，实现区域协调发展。",
+        "quote": "实施西部大开发，促进区域协调发展。",
+        "tags": ["西部大开发", "区域发展", "协调", "振兴西部"],
+        "brief": "西部大开发战略，促进东西部协调发展。"
+    },
+    {
+        "id": 67,
+        "name": "南水北调",
+        "lat": 32.5,
+        "lon": 112.5,
+        "date": "2002-12-27",
+        "dateLabel": "2002年12月27日",
+        "type": "meeting",
+        "icon": "💧",
+        "img": "Image/South-to-North_Water_Diversion.jpg",
+        "color": "#DAA520",
+        "location": "湖北省丹江口市",
+        "story": "2002年12月27日，南水北调工程开工。这是世界上规模最大的调水工程，旨在缓解北方地区水资源短缺问题。",
+        "quote": "一江清水向北流。",
+        "tags": ["南水北调", "调水工程", "世纪工程", "水资源"],
+        "brief": "南水北调工程开工，世纪工程润泽北方。"
+    },
+    {
+        "id": 68,
+        "name": "北京奥运会",
+        "lat": 39.9997,
+        "lon": 116.392,
+        "date": "2008-08-08",
+        "dateLabel": "2008年8月8日",
+        "type": "meeting",
+        "img": "Image/Beijing_Olympics.jpg",
+        "icon": "🏅",
+        "color": "#DAA520",
+        "location": "北京市朝阳区国家体育场（鸟巢）",
+        "story": "2008年8月8日，第29届夏季奥林匹克运动会在北京国家体育场\"鸟巢\"隆重开幕。北京奥运会是中国首次举办夏季奥运会，共创造了43项新世界纪录及132项新奥运纪录，中国以51枚金牌居金牌榜首名，是奥运历史上首个登上金牌榜首的亚洲国家。",
+        "quote": "同一个世界，同一个梦想。",
+        "tags": ["北京奥运会", "鸟巢", "金牌第一", "奥运梦想"],
+        "brief": "北京奥运会成功举办，中国首次登上金牌榜首。"
+    },
+    {
+        "id": 69,
+        "name": "一带一路",
+        "lat": 31.2304,
+        "lon": 121.4737,
+        "date": "2013-09-07",
+        "dateLabel": "2013年9月7日",
+        "type": "meeting",
+        "icon": "🌏",
+        "img": "Image/Belt_and_Road.jpg",
+        "color": "#DAA520",
+        "location": "上海（丝绸之路经济带起点）",
+        "story": "2013年9月和10月，习近平主席分别提出共建\"丝绸之路经济带\"和\"21世纪海上丝绸之路\"的重大倡议。",
+        "quote": "丝绸之路绵亘万里，延续千年。",
+        "tags": ["一带一路", "丝绸之路", "对外开放", "合作共赢"],
+        "brief": "习近平提出一带一路倡议，构建人类命运共同体。"
+    },
+    {
+        "id": 70,
+        "name": "新冠疫情阻击战",
+        "lat": 30.525,
+        "lon": 114.35,
+        "date": "2020-01-23",
+        "dateLabel": "2020年1月23日",
+        "type": "meeting",
+        "icon": "🏥",
+        "img": "Image/The_battle_against_the_COVID-19_pandemic.jpg",
+        "color": "#DAA520",
+        "location": "湖北省武汉市",
+        "story": "2020年1月23日，武汉封城，全国人民在党的领导下，打响了抗击新冠肺炎疫情的人民战争、总体战、阻击战。",
+        "quote": "生命至上，举国同心。",
+        "tags": ["新冠疫情", "武汉加油", "生命至上", "众志成城"],
+        "brief": "全国人民众志成城，打赢新冠疫情阻击战。"
+    },
+    {
+        "id": 71,
+        "name": "脱贫攻坚",
+        "lat": 26.82,
+        "lon": 104.84,
+        "date": "2020-11-23",
+        "dateLabel": "2020年11月23日",
+        "type": "meeting",
+        "icon": "🏠",
+        "img": "Image/Poverty_Alleviation.jpg",
+        "color": "#DAA520",
+        "location": "全国",
+        "story": "2020年11月23日，全国所有贫困县全部脱贫，标志着中国832个贫困县全部脱贫，历史性地解决了绝对贫困问题。",
+        "quote": "民亦劳止，汔可小康。",
+        "tags": ["脱贫攻坚", "全面小康", "精准扶贫", "历史性成就"],
+        "brief": "中国实现全面脱贫，历史性地解决了绝对贫困问题。"
+    },
+    {
+        "id": 72,
+        "name": "建党百年",
+        "lat": 39.9087,
+        "lon": 116.3975,
+        "date": "2021-07-01",
+        "dateLabel": "2021年7月1日",
+        "type": "meeting",
+        "icon": "🎂",
+        "img": "/Image/100th_Anniversary_of_the_Founding_of_the_Party.jpg",
+        "color": "#DAA520",
+        "location": "北京市天安门广场",
+        "story": "2021年7月1日，庆祝中国共产党成立100周年大会在北京天安门广场隆重举行。习近平总书记发表重要讲话，庄严宣告在中华大地上全面建成了小康社会，历史性地解决了绝对贫困问题。",
+        "quote": "请党放心，强国有我！——新时代青年誓言",
+        "tags": ["建党百年", "全面小康", "新时代", "强国有我"],
+        "brief": "庆祝中国共产党成立100周年，全面建成小康社会。"
+    }
+]
+
+    // ==================== Loading Screen ====================
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            document.getElementById('loading-screen').classList.add('hidden');
+        }, 1200);
+    });
+
+    // ==================== Particles ====================
+    function createParticles() {
+        const container = document.getElementById('particles');
+        for (let i = 0; i < 120; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDuration = (Math.random() * 8 + 6) + 's';
+            particle.style.animationDelay = (Math.random() * 10) + 's';
+            particle.style.width = (Math.random() * 4 + 2) + 'px';
+            particle.style.height = particle.style.width;
+            if (Math.random() > 0.2) {
+                particle.style.background = '#C41E3A';
+                particle.style.boxShadow = '0 0 10px rgba(196, 30, 58, 0.8)';
+            }
+            container.appendChild(particle);
+        }
+    }
+    createParticles();
+
+    // ==================== Navbar Scroll ====================
+    window.addEventListener('scroll', () => {
+        const nav = document.getElementById('navbar');
+        if (window.scrollY > 100) {
+            nav.classList.add('scrolled');
+        } else {
+            nav.classList.remove('scrolled');
+        }
+        // Update active nav link
+        const sections = ['hero', 'overview', 'map-section', 'timeline-section', 'stories'];
+        let current = '';
+        sections.forEach(id => {
+            const section = document.getElementById(id);
+            if (section && window.scrollY >= section.offsetTop - 200) {
+                current = id;
+            }
+        });
+        document.querySelectorAll('.nav-links a').forEach(a => {
+            a.classList.remove('active');
+            if (a.getAttribute('href') === '#' + current) {
+                a.classList.add('active');
+            }
+        });
+    });
+
+    // ==================== Scroll Animations ====================
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    // ==================== ECharts Map ====================
+    let mapChart;
+    let currentFilter = 'all';
+
+    function initMap() {
+        mapChart = echarts.init(document.getElementById('map-chart'), null, { renderer: 'canvas' });
+
+        const option = buildMapOption(historyData);
+        mapChart.setOption(option);
+
+        mapChart.on('click', (params) => {
+            if (params.componentType === 'series' && params.dataIndex !== undefined) {
+                const data = historyData[params.dataIndex];
+                if (data) openModal(data);
+            }
+        });
+
+        window.addEventListener('resize', () => mapChart.resize());
+    }
+      
+    function buildMapOption(data) {
+        const scatterData = data.map(item => ({
+            name: item.name,
+            value: [item.lon, item.lat, 1],
+            itemStyle: { color: '#C41E3A' }
+        }));
+
+        return {
+            backgroundColor: 'transparent',
+            tooltip: {
+                trigger: 'item',
+                backgroundColor: 'rgba(26, 26, 46, 0.95)',
+                borderColor: 'rgba(218, 165, 32, 0.3)',
+                borderWidth: 1,
+                textStyle: { color: '#E8E0D0', fontSize: 13 },
+                formatter: (params) => {
+                    if (params.seriesType === 'scatter') {
+                        const item = data.find(d => d.name === params.name);
+                        if (item) {
+                            return `<div style="font-weight:bold;font-size: 15px;color:#DAA520;margin-bottom:6px;">${item.icon} ${item.name}</div>
+                                    <div style="color:#8B8BA3;font-size: 12px;margin-bottom:4px;">📅 ${item.dateLabel}</div>
+                                    <div style="color:#8B8BA3;font-size: 12px;">📍 ${item.location}</div>
+                                    <div style="margin-top:8px;color:#E8E0D0;font-size: 12px;">点击查看详情</div>`;
+                        }
+                    }
+                    return params.name;
+                }
+            },
+            geo: {
+                map: 'china',
+                roam: true,
+                zoom: 1.5,
+                center: [104, 35],
+                label: {
+                    show: true,
+                    color: '#E8E0D0',
+                    fontSize: 10,
+                    fontWeight: 'bold'
+                },
+                itemStyle: {
+                    areaColor: {
+                        type: 'linear',
+                        x: 0, y: 0, x2: 0, y2: 1,
+                        colorStops: [
+                            { offset: 0, color: '#2D2D44' },
+                            { offset: 1, color: '#1A1A2E' }
+                        ]
+                    },
+                    borderColor: 'rgba(218, 165, 32, 0.3)',
+                    borderWidth: 1.5,
+                    shadowColor: 'rgba(0, 0, 0, 0.5)',
+                    shadowBlur: 20
+                },
+                emphasis: {
+                    itemStyle: {
+                        areaColor: '#3D3D5C',
+                        borderColor: '#DAA520',
+                        borderWidth: 2
+                    },
+                    label: {
+                        show: true,
+                        color: '#DAA520',
+                        fontSize: 10,
+                        fontWeight: 'bold'
+                    }
+                }
+            },
+            series: [
+                {
+                    name: '历史节点',
+                    type: 'scatter',
+                    coordinateSystem: 'geo',
+                    data: scatterData,
+                    symbol: 'path://M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z',
+                    symbolSize: 12,
+                    label: {
+                        show: true,
+                        formatter: '{b}',
+                        position: 'right',
+                        color: '#1A1A2E',
+                        fontSize: 11,
+                        distance: 8,
+                        backgroundColor: 'rgba(255, 255, 255, 0.85)',
+                        padding: [3, 6, 3, 6],
+                        borderRadius: 3
+                    },
+                    itemStyle: {
+                        color: '#C41E3A',
+                        shadowBlur: 8,
+                        shadowColor: 'rgba(196, 30, 58, 0.4)'
+                    }
+                }
+            ]
+        };
+    }
+
+    // ==================== Map Zoom ====================
+    function zoomMap(direction) {
+        if (!mapChart) return;
+        const option = mapChart.getOption();
+        const geo = option.geo && option.geo[0];
+        if (geo) {
+            const currentZoom = geo.zoom || 6;
+            const step = 1;
+            const newZoom = Math.max(0.5, Math.min(10, currentZoom + direction * step));
+            mapChart.setOption({
+                geo: { zoom: newZoom }
+            });
+        }
+    }
+
+    // ==================== Map Filter ====================
+    function filterMap(type, btn) {
+        currentFilter = type;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        if (mapChart) {
+            const option = buildMapOption(historyData);
+            mapChart.setOption(option, true);
+        }
+    }
+
+    // ==================== Search ====================
+    function handleSearch(query) {
+        const resultsContainer = document.getElementById('search-results');
+        if (!query.trim()) {
+            resultsContainer.classList.remove('active');
+            return;
+        }
+
+        const results = historyData.filter(item =>
+            item.name.includes(query) ||
+            item.location.includes(query) ||
+            item.story.includes(query) ||
+            item.tags.some(tag => tag.includes(query))
+        );
+
+        if (results.length === 0) {
+            resultsContainer.innerHTML = '<div class="search-result-item" style="color:#8B8BA3;">未找到相关结果</div>';
+        } else {
+            resultsContainer.innerHTML = results.map(item =>
+                `<div class="search-result-item" onclick="highlightAndOpen(${item.id})">
+                    ${item.icon} ${item.name} <span style="color:#8B8BA3;font-size: 11px;margin-left:8px;">${item.dateLabel}</span>
+                </div>`
+            ).join('');
+        }
+        resultsContainer.classList.add('active');
+    }
+
+    function highlightAndOpen(id) {
+        const item = historyData.find(d => d.id === id);
+        if (item) {
+            openModal(item);
+            document.getElementById('search-input').value = '';
+            document.getElementById('search-results').classList.remove('active');
+        }
+    }
+
+    // Close search on click outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.search-box')) {
+            document.getElementById('search-results').classList.remove('active');
+        }
+    });
+
+    // ==================== Timeline ====================
+    let currentTimelineIndex = 0; // Start with first year
+    
+    // 定义各年份阈值
+    function getYearCutoff(labelIndex) {
+        const yearCutoffs = [1922, 1928, 1932, 1935, 1936, 1938, 1946, 1950, 9999];
+        return yearCutoffs[labelIndex];
+    }
+
+    function initTimeline() {
+        renderTimelineEvents();
+        initTimelineSlider();
+    }
+
+    function renderTimelineEvents() {
+        const container = document.getElementById('timeline-events');
+        const yearCutoff = getYearCutoff(currentTimelineIndex);
+        // 过滤出年份小于阈值的的事件，并按日期排序
+        const visibleData = historyData
+            .filter(item => {
+                const itemYear = parseInt(item.date.substring(0, 4));
+                return itemYear < yearCutoff;
+            })
+            .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        container.innerHTML = visibleData.map((item, index) => `
+        <div class="story-card fade-in visible" onclick="openModalById(${item.id})" style="animation: fadeInUp 0.5s ease ${index * 0.05}s both;">
+        	<div class="story-card-img">
+                    <img src="${item.img}" alt="南昌起义" class="story-card-photo">
+                    <div class="img-overlay"></div>
+                </div>
+                <div class="story-card-body">
+                    <div class="story-card-date">${item.dateLabel}</div>
+                    <div class="story-card-title">${item.name}</div>
+                    <div class="story-card-text">${item.brief}</div>
+            	</div>
+            </div>
+        `).join('');
+    }
+
+    function initTimelineSlider() {
+        const slider = document.getElementById('timeline-slider');
+        const thumb = document.getElementById('timeline-thumb');
+        const progress = document.getElementById('timeline-progress');
+        let isDragging = false;
+        let pendingUpdate = false; // 标记是否有待处理的更新
+
+        function updateSlider(clientX) {
+            const rect = slider.getBoundingClientRect();
+            let percent = ((clientX - rect.left) / rect.width) * 100;
+            percent = Math.max(0, Math.min(100, percent));
+
+            const labelCount = document.querySelectorAll('.timeline-date').length;
+            const index = Math.round((percent / 100) * (labelCount - 1));
+            currentTimelineIndex = index;
+
+            progress.style.width = percent + '%';
+            thumb.style.left = percent + '%';
+
+            // Update active date labels
+            document.querySelectorAll('.timeline-date').forEach((d, i) => {
+                d.classList.toggle('active', i <= index);
+            });
+
+            // 只更新UI，不加载数据
+            pendingUpdate = true;
+        }
+
+        // 只在松开鼠标时加载数据
+        function loadData() {
+            if (pendingUpdate) {
+                renderTimelineEvents();
+                updateMapByTimeline(currentTimelineIndex);
+                pendingUpdate = false;
+            }
+        }
+
+        slider.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            updateSlider(e.clientX);
+        });
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) updateSlider(e.clientX);
+        });
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                loadData(); // 松开鼠标时才加载数据
+            }
+        });
+
+        // Touch support
+        slider.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            updateSlider(e.touches[0].clientX);
+        });
+        document.addEventListener('touchmove', (e) => {
+            if (isDragging) updateSlider(e.touches[0].clientX);
+        });
+        document.addEventListener('touchend', () => {
+            if (isDragging) {
+                isDragging = false;
+                loadData(); // 松开触摸时才加载数据
+            }
+        });
+
+        // Initialize at first year
+        setTimeout(() => {
+            setTimeline(0); // Start with 1921
+        }, 500);
+    }
+
+    function setTimeline(index) {
+        currentTimelineIndex = index;
+        const labelCount = document.querySelectorAll('.timeline-date').length;
+        const percent = (index / (labelCount - 1)) * 100;
+        document.getElementById('timeline-progress').style.width = percent + '%';
+        document.getElementById('timeline-thumb').style.left = percent + '%';
+
+        document.querySelectorAll('.timeline-date').forEach((d, i) => {
+            d.classList.toggle('active', i <= index);
+        });
+
+        renderTimelineEvents();
+        updateMapByTimeline(index);
+    }
+
+    function updateMapByTimeline(index) {
+        if (!mapChart) return;
+        const yearCutoff = getYearCutoff(index);
+        const visibleData = historyData.filter(item => {
+            const itemYear = parseInt(item.date.substring(0, 4));
+            return itemYear < yearCutoff;
+        });
+        const option = buildMapOption(visibleData);
+        mapChart.setOption(option, true);
+    }
+      
+    // ==================== Modal ====================
+    function openModal(item) {
+      	speechSynthesis.cancel(); // 清空队列
+    
+        const utterance = new SpeechSynthesisUtterance(item.story);
+        utterance.rate = 1.3;
+        speechSynthesis.speak(utterance);
+        const overlay = document.getElementById('modal-overlay');
+        document.getElementById('modal-date').textContent = item.dateLabel;
+        document.getElementById('modal-title').textContent = item.icon + ' ' + item.name;
+        document.getElementById('modal-location').textContent = item.location;
+        document.getElementById('modal-story').textContent = item.story;
+        document.getElementById('modal-quote').textContent = item.quote;
+
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function openModalById(id) {
+        const item = historyData.find(d => d.id === id);
+        if (item) openModal(item);
+    }
+
+    function closeModal(event) {
+        if (event && event.target !== event.currentTarget && !event.target.classList.contains('modal-close')) return;
+        const overlay = document.getElementById('modal-overlay');
+      	speechSynthesis.cancel(); // 清空队列
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeModal();
+    });
+
+    // ==================== Mobile Nav ====================
+    function toggleMobileNav() {
+        const links = document.querySelector('.nav-links');
+        links.style.display = links.style.display === 'flex' ? 'none' : 'flex';
+        links.style.position = 'absolute';
+        links.style.top = '70px';
+        links.style.left = '0';
+        links.style.width = '100%';
+        links.style.flexDirection = 'column';
+        links.style.background = 'rgba(26, 26, 46, 0.98)';
+        links.style.padding = '20px';
+        links.style.borderBottom = '1px solid rgba(218, 165, 32, 0.2)';
+    }
+
+    // ==================== Initialize ====================
+    document.addEventListener('DOMContentLoaded', () => {
+        initMap();
+        initTimeline();
+    });
+    </script>
+</body>
+</html>

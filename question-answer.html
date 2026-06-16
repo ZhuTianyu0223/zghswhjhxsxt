@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>红色知识 AI 助手</title>
+    <style>
+        :root {
+            --primary-red: #D32F2F;
+            --dark-red: #B71C1C;
+            --light-red: #FFEBEE;
+            --gold-accent: #FFD700;
+            --text-main: #212121;
+            --text-sub: #757575;
+            --bg-chat: #FFF8F8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: "PingFang SC", "Microsoft YaHei", sans-serif; }
+
+        body {
+            height: 100vh;
+            background: linear-gradient(135deg, var(--dark-red) 0%, var(--primary-red) 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 600px;
+            height: 90vh;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .chat-header {
+            background: var(--primary-red);
+            color: white;
+            padding: 18px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--gold-accent);
+        }
+
+        .header-info h2 { font-size: 18px; font-weight: 600; letter-spacing: 1px; }
+        .header-info span { font-size: 12px; opacity: 0.9; }
+        
+        .btn-clear {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: 0.3s;
+        }
+        .btn-clear:hover { background: rgba(255,255,255,0.4); }
+
+        .chat-body {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: var(--bg-chat);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .chat-body::-webkit-scrollbar { width: 6px; }
+        .chat-body::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+
+        .message {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.6;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .msg-user {
+            align-self: flex-end;
+            background: var(--primary-red);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .msg-ai {
+            align-self: flex-start;
+            background: white;
+            color: var(--text-main);
+            border: 1px solid #ffebee;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 5px rgba(211, 47, 47, 0.05);
+        }
+
+        .chat-footer {
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #eee;
+            border-radius: 24px;
+            outline: none;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+
+        input:focus { border-color: var(--primary-red); }
+
+        button.send-btn {
+            width: 48px;
+            height: 48px;
+            border: none;
+            background: var(--primary-red);
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button.send-btn:hover { background: var(--dark-red); transform: scale(1.05); }
+        button.send-btn:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+
+        .welcome-text {
+            text-align: center;
+            color: var(--text-sub);
+            font-size: 13px;
+            margin: auto 0;
+            padding: 20px;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="chat-header">
+        <div class="header-info">
+            <h2>🚩 红色知识 AI</h2>
+            <span>专注党史·理论·文化</span>
+        </div>
+        <button class="btn-clear" onclick="clearChat()">清空记录</button>
+    </div>
+
+    <div class="chat-body" id="chatBody">
+        <div class="welcome-text">
+            您好！我是您的红色知识助手。<br>
+            您可以问我关于党史、理论、英雄人物等问题。<br>
+            <small>✅ 已对接阿里百炼大模型</small>
+        </div>
+    </div>
+
+    <div class="chat-footer">
+        <input type="text" id="userInput" placeholder="输入您想了解的红色知识..." autocomplete="off">
+        <button class="send-btn" id="sendBtn" onclick="handleSend()">➤</button>
+    </div>
+</div>
+
+<script>
+    // ==========================================
+    // 1. 阿里百炼 API 配置
+    // ==========================================
+    const API_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
+    const API_KEY = "sk-你的阿里百炼API-Key"; // ⚠️ 生产环境请务必通过后端代理，不要在前端暴露 Key！
+    const MODEL = "qwen-plus"; // 可选模型：qwen-turbo, qwen-plus, qwen-max 等
+
+    const SYSTEM_PROMPT = `你是一位专业的“红色知识助手”。
+    你的任务是准确、客观、生动地解答关于中国共产党历史、马克思主义理论、中国革命精神及红色文化的问题。
+    要求：
+    1. 史实准确，引用权威资料。
+    2. 语言庄重但不失亲切，避免过度说教。
+    3. 适当使用 🚩、⭐、📖 等表情增加可读性。
+    4. 如果用户询问非相关话题，礼貌引导回红色知识领域。`;
+
+    // ==========================================
+    // 2. 状态管理
+    // ==========================================
+    const chatBody = document.getElementById('chatBody');
+    const userInput = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+    
+    let history = [{ role: "system", content: SYSTEM_PROMPT }];
+
+    // ==========================================
+    // 3. 核心交互逻辑
+    // ==========================================
+    userInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSend();
+        }
+    });
+
+    async function handleSend() {
+        const text = userInput.value.trim();
+        if (!text) return;
+
+        const welcome = document.querySelector('.welcome-text');
+        if (welcome) welcome.remove();
+
+        appendMessage(text, 'user');
+        userInput.value = '';
+        setLoading(true);
+
+        history.push({ role: "user", content: text });
+
+        // 创建 AI 消息气泡（初始为空，用于流式填充）
+        const aiMsgDiv = appendMessage("", 'ai');
+        let fullText = "";
+
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${'sk-54329bcf01954b93a8447f25fc58e556'}`
+                },
+                body: JSON.stringify({
+                    model: MODEL,
+                    messages: history,
+                    stream: true // 开启流式输出
+                })
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error?.message || `API 请求失败: ${response.status}`);
+            }
+
+            // 获取流读取器与文本解码器
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder("utf-8");
+            let buffer = "";
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || ''; // 保留未完成的行
+
+                for (const line of lines) {
+                    const trimmedLine = line.trim();
+                    if (!trimmedLine || !trimmedLine.startsWith('data:')) continue;
+                    
+                    const dataStr = trimmedLine.slice(5).trim();
+                    if (dataStr === '[DONE]') continue;
+
+                    try {
+                        const parsed = JSON.parse(dataStr);
+                        const content = parsed.choices?.[0]?.delta?.content || "";
+                        if (content) {
+                            fullText += content;
+                            aiMsgDiv.innerText = fullText; // 逐字更新内容
+                            scrollToBottom();
+                        }
+                    } catch (e) {
+                        console.warn("JSON 解析失败:", dataStr);
+                    }
+                }
+            }
+
+            // 将完整的 AI 回复加入历史记录
+            history.push({ role: "assistant", content: fullText });
+
+        } catch (err) {
+            aiMsgDiv.innerText = "⚠️ 发生错误: " + err.message;
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    // ==========================================
+    // 4. UI 辅助函数
+    // ==========================================
+    function appendMessage(text, sender) {
+        const div = document.createElement('div');
+        div.className = `message msg-${sender}`;
+        div.innerText = text;
+        chatBody.appendChild(div);
+        scrollToBottom();
+        return div; // 返回 DOM 节点以便流式更新
+    }
+
+    function scrollToBottom() {
+        requestAnimationFrame(() => {
+            chatBody.scrollTop = chatBody.scrollHeight;
+        });
+    }
+
+    function setLoading(isLoading) {
+        sendBtn.disabled = isLoading;
+        userInput.disabled = isLoading;
+        if (isLoading) userInput.placeholder = "AI 正在思考...";
+        else userInput.placeholder = "输入您想了解的红色知识...";
+    }
+
+    function clearChat() {
+        if(confirm('确定要清空当前对话吗？')) {
+            chatBody.innerHTML = `<div class="welcome-text">对话已清空，请问有什么新问题？</div>`;
+            history = [{ role: "system", content: SYSTEM_PROMPT }];
+        }
+    }
+</script>
+
+</body>
+</html>
