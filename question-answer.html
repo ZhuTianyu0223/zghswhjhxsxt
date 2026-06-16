@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/js/aliyun-key.js"></script>
     <title>红色知识 AI 助手</title>
     <style>
         :root {
@@ -184,7 +185,6 @@
     // 1. 阿里百炼 API 配置
     // ==========================================
     const API_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
-    const API_KEY = "sk-你的阿里百炼API-Key"; // ⚠️ 生产环境请务必通过后端代理，不要在前端暴露 Key！
     const MODEL = "qwen-plus"; // 可选模型：qwen-turbo, qwen-plus, qwen-max 等
 
     const SYSTEM_PROMPT = `你是一位专业的“红色知识助手”。
@@ -236,7 +236,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${'sk-54329bcf01954b93a8447f25fc58e556'}`
+                    'Authorization': `Bearer ${API_KEY}`
                 },
                 body: JSON.stringify({
                     model: MODEL,
